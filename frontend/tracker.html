@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Momentum Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* Dashboard Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+    }
+    .stat-card {
+      text-align: center;
+      padding: var(--space-md);
+      background: var(--glass-highlight);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; }
+
+    /* Inline Input Form */
+    .add-habit-form {
+      display: flex;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+      background: rgba(0,0,0,0.2);
+      padding: var(--space-sm);
+      border-radius: var(--radius-md);
+    }
+    .add-habit-form input { flex: 1; border: none; background: transparent; color: white; }
+    .add-habit-form input:focus { box-shadow: none; outline: none; }
+
+    /* Habit History Dots (Mini Heatmap) */
+    .habit-history {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+      margin-right: var(--space-md);
+    }
+    .history-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+      transition: var(--transition);
+    }
+    .history-dot.done { background: var(--accent); box-shadow: 0 0 5px var(--accent-glow); }
+    .history-dot.today { border: 1px solid var(--text-muted); }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="home.html"><img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Logo" class="logo"></a>
+        </div>
+        <div class="navbar-right">
+            <span class="username"><i class="fa-solid fa-user"></i> User</span>
+        </div>
+    </nav>
+
+  <aside class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <nav>
+      <ul>
+        <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+        <li><a href="tracker.html" class="active"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
+        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="burger" id="sidebar-burger">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main class="main">
+    
+    <div class="header">
+      <h1>Momentum Tracker</h1>
+      <p>Consistency is the key to mastery.</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-streak">0</div>
+        <div class="stat-label">Current Streak (Days)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-today">0%</div>
+        <div class="stat-label">Today's Completion</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Total Check-ins</div>
+      </div>
+    </div>
+
+    <div class="dashboard-wrapper">
+      <div class="dashboard-card">
+        <div class="dashboard-content">
+          <div class="chart-container">
+            <canvas id="doughnut-chart"></canvas>
+            <div class="chart-center-text">
+              <span id="dashboard-percentage">0%</span>
+              <small>Complete</small>
+            </div>
+          </div>
+          <div class="dashboard-legend">
+            <h3>Daily Focus</h3>
+            <p>Your habit segments light up as you complete them.</p>
+            <ul id="dashboard-legend-list">
+              </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="checklist-flex">
+      
+      <div class="checklist-tasks-col">
+        <div class="checklist-tasks-header" style="margin-bottom: 1rem;">
+          <h3 class="templates-header">Daily Habits</h3>
+        </div>
+
+        <div class="add-habit-form">
+          <input type="text" id="new-habit-input" placeholder="Type a new habit (e.g., Drink Water)..." autocomplete="off">
+          <button class="btn-primary" id="add-habit-btn" style="padding: 0.4rem 1rem; font-size:0.8rem;">Add</button>
+        </div>
+
+        <ul class="checklist-tasks-list" id="habits-list">
+          </ul>
+      </div>
+
+      <div class="checklist-templates-col">
+        <h3 class="templates-header">Weekly Performance</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Your activity over the last 7 days.
+        </p>
+        
+        <div style="position: relative; height: 250px; width: 100%;">
+            <canvas id="progress-chart"></canvas>
+        </div>
+
+        <div class="quote" id="motivational-quote" style="margin-top: 2rem; font-size: 0.9rem;"></div>
+
+        <button class="checklist-history-btn" id="clear-data-btn" style="margin-top: 2rem; color: #ef4444; border-color: rgba(239,68,68,0.2);">
+          <i class="fa-solid fa-trash"></i> Reset All Data
+        </button>
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2025 Productivity Dashboard. Stay Consistent.</p>
+  </footer>
+
+  <script src="tracker.js"></script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Etho Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: var(--space-xl);
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 450px;
+            background: var(--glass-surface);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3xl);
+            box-shadow: var(--glass-shadow);
+            animation: fadeInUp 0.6s var(--bounce);
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: var(--space-2xl);
+        }
+
+        .auth-logo img {
+            height: 60px;
+            filter: drop-shadow(0 0 0.5px var(--primary-glow));
+        }
+
+        .auth-logo h1 {
+            font-size: 1.8rem;
+            margin-top: var(--space-md);
+            background: linear-gradient(135deg, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-logo p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: var(--space-xs);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .password-wrapper input {
+            padding-right: 3rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            padding: 0.5rem;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary);
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 20px var(--primary-glow);
+            margin-top: var(--space-md);
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--primary-glow);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .toggle-auth {
+            text-align: center;
+            margin-top: var(--space-xl);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .toggle-auth a {
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .toggle-auth a:hover {
+            color: var(--secondary);
+        }
+
+        .message {
+            padding: 0.9rem;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-lg);
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .message.success {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            color: var(--accent);
+        }
+
+        .message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .username-group {
+            display: none;
+        }
+
+        .username-group.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-logo">
+            <img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Etho Logo">
+            <h1 id="auth-title">Welcome Back</h1>
+            <p id="auth-subtitle">Sign in to continue your journey</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <form id="auth-form">
+            <div class="form-group username-group" id="username-group">
+                <label for="username">
+                    <i class="fa-solid fa-user"></i> Username
+                </label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    placeholder="Choose a username"
+                    minlength="3"
+                    maxlength="20"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">
+                    <i class="fa-solid fa-envelope"></i> Email
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="your.email@example.com"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">
+                    <i class="fa-solid fa-lock"></i> Password
+                </label>
+                <div class="password-wrapper">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        placeholder="••••••••"
+                        minlength="6"
+                        required
+                    >
+                    <button type="button" class="toggle-password" id="toggle-password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="auth-btn" id="submit-btn">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In
+            </button>
+        </form>
+
+        <div class="toggle-auth">
+            <span id="toggle-text">Don't have an account?</span>
+            <a id="toggle-link">Sign Up</a>
+        </div>
+
+<button id="google-login" class="google-login">
+    Continue with Google 
+    <img src="../assets/images/Google__G__logo.svg.webp" alt="Google Logo">
+</button>    
+</div>
+
+
+
+    <script src="auth.js"></script>
+    <script>
+        // Toggle password visibility
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const passwordInput = document.getElementById('password');
+        
+        togglePasswordBtn.addEventListener('click', () => {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            
+            // Change icon
+            const icon = togglePasswordBtn.querySelector('i');
+            if (type === 'password') {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        });
+    </script>
+</body>
+</html>

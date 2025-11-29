@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checklist | Etho Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-left">
+      <a href="home.html">
+        <img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Etho Logo" class="logo">
+      </a>
+    </div>
+    <div class="navbar-right">
+      <span class="username">
+        <i class="fa-regular fa-circle-user"></i> User
+      </span>
+    </div>
+  </nav>
+
+  <aside class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <nav>
+      <ul>
+        <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="checklist.html" class="active"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+        <li><a href="tracker.html"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
+        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="burger" id="sidebar-toggle">
+    <div></div><div></div><div></div>
+  </div>
+
+  <main class="checklist-main">
+    <header class="header">
+      <h1>Daily Focus</h1>
+      <p>Design your day, track your wins.</p>
+    </header>
+
+    <div class="checklist-progress-container">
+      <div class="checklist-progress-label">
+        <span>Progress</span>
+        <span id="progress-text">0%</span>
+      </div>
+      <div class="checklist-progress-bar-bg">
+        <div class="checklist-progress-bar-fill" id="progress-bar"></div>
+      </div>
+    </div>
+
+    <section class="checklist-flex">
+      
+      <div class="checklist-tasks-col" id="checklist-tasks-col">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <h2 style="font-size:1.2rem; color:var(--text-main);">Today's Tasks</h2>
+          <button class="checklist-add-btn" id="add-task-btn">
+            <i class="fa-solid fa-plus"></i> Add Task
+          </button>
+        </div>
+
+        <ul class="checklist-tasks-list" id="tasks-list">
+          </ul>
+
+        <div class="checklist-history" style="margin-top:2rem; border-top:1px solid var(--glass-border); padding-top:1rem;">
+          <button class="checklist-history-btn" id="history-btn">
+            <i class="fa-solid fa-clock-rotate-left"></i> History & Previous Lists
+          </button>
+          <div class="checklist-history-dropdown" id="history-dropdown" hidden style="background:var(--bg-body); padding:1rem; border-radius:12px; margin-top:10px; list-style-type: none;">
+            <ul id="history-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="checklist-templates-col">
+        <h2 style="font-size:1.1rem; color:var(--text-muted); margin-bottom:1rem; text-transform:uppercase; letter-spacing:1px;">Templates</h2>
+        
+        <div class="templates-options">
+          <button class="template-btn" data-template="Cr7 routine">
+            <i class="fa-solid fa-person-running"></i> CR7 Routine
+          </button>
+          <button class="template-btn" data-template="Jeff Bezos routine">
+            <i class="fa-solid fa-rocket"></i> Jeff Bezos Routine
+          </button>
+          <button class="template-btn" data-template="Mark Zuckerberg routine">
+            <i class="fa-brands fa-meta"></i> Zuckerberg Routine
+          </button>
+          <div style="height:1px; background:var(--glass-border); margin:10px 0;"></div>
+          <button class="template-btn" data-template="custom" style="color:var(--accent);">
+            <i class="fa-solid fa-pen-fancy"></i> Create Custom
+          </button>
+          <button class="template-btn" data-template="empty" style="color:var(--secondary);">
+            <i class="fa-regular fa-square"></i> New Blank List
+          </button>
+        </div>
+      </div>
+
+      <div class="categories" id="categories-section">
+        <h2 style="font-size:1rem; margin-bottom:1rem; color:var(--text-muted);">Filter by Category</h2>
+        <div class="categories-list">
+          </div>
+      </div>
+    </section>
+
+    <section class="quote" style="text-align:center; margin-top:3rem; opacity:0.6; font-style:italic;">
+      “Success is the sum of small efforts, repeated day in and day out.”
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2025 Etho Dashboard. Crafted with Focus.</p>
+  </footer>
+
+  <script src="checklist.js"></script>
+</body>
+</html>

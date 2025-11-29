@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="home.html">
+  <a href="home.html"><img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Logo" class="logo"></a>
+            </a>
+        </div>
+        <div class="navbar-right">
+            <span class="username">Welcome, User</span>
+        </div>
+    </nav>
+<div class="sidebar-overlay" id="overlay"></div>
+   <aside class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <nav>
+      <ul>
+        <li><a href="home.html" class="active"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+        <li><a href="tracker.html"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
+        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+    <div class="burger" id="burger" tabindex="0" aria-label="Toggle menu">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+    <main class="main">
+        <header class="header">
+            <h1>Welcome back.</h1>
+            <h2>Ready to be productive today?</h2>
+        </header>
+
+        <div class="overview">
+            <div class="card">
+                <h3><a href="goals.html">Goals</a> </h3>
+                <p>Track your SMART goals progress.</p>
+                <img src="../assets/images/progress.png" alt="Progress Chart">
+
+                <div style="margin-top:1rem; text-align:right; color:var(--primary); font-weight:600;"><a href="goals.html"> View &rarr;</a></div>
+            </div>
+            <div class="card">
+                <h3><a href="checklist.html">Checklist</a></h3>
+                <p>Manage your daily tasks and routines.</p>
+                <img src="../assets/images/checklist.png" alt="Checklist Preview">
+
+                <div style="margin-top:1rem; text-align:right; color:var(--primary); font-weight:600;" class="view-link"><a href="checklist.html"> View &rarr;</a></div>
+            </div>
+            <div class="card">
+                <h3><a href="tracker.html">Habit Tracker</a></h3>
+                <p>Visualize your consistency over time.</p>          
+                <img src="../assets/images/track-preview.png" alt="Tracker Preview">
+                <div style="margin-top:1rem; text-align:right; color:var(--primary); font-weight:600;"><a href="tracker.html"> View &rarr;</a></div>
+            </div>
+            <div class="card">
+                <h3><a href="learning.html">Learning</a></h3>
+                <p>Keep notes and resources in one place.</p>
+                <img src="../assets/images/note.png" alt="Notes Preview">
+                <div style="margin-top:1rem; text-align:right; color:var(--primary); font-weight:600;"><a href="learning.html"> View &rarr;</a></div>
+            </div>
+        </div>
+
+        <div class="quote">
+            <p>"The only way to do great work is to love what you do."</p>
+            <small>— Steve Jobs</small>
+        </div>
+        
+    </main>
+
+    <footer class="footer">
+        <p>Copyright &copy; 2025. Made with ❤️.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

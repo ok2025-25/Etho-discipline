@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learning Notes</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-left">
+      <a href="home.html"><img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Logo" class="logo"></a>
+    </div>
+    <div class="navbar-right">
+      <span class="username"><i class="fa-solid fa-user-astronaut"></i>User</span>
+    </div>
+  </nav>
+
+  <div class="burger" id="burger">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+
+  <aside class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <nav>
+      <ul>
+        <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+        <li><a href="tracker.html"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
+        <li><a href="learning.html" class="active"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <h1>Knowledge Base 📘</h1>
+      <p>Capture your thoughts, ideas, and daily learnings.</p>
+    </header>
+
+    <div class="learning-container">
+      
+      <aside class="card notes-sidebar-card">
+        <div class="notes-header">
+            <h3>Your Notes</h3>
+            <button id="new-note-btn" class="checklist-add-btn">
+                <i class="fa-solid fa-plus"></i> New
+            </button>
+        </div>
+        <div class="search-wrapper">
+            <i class="fa-solid fa-search search-icon"></i>
+            <input type="text" placeholder="Search notes..." id="search-notes">
+        </div>
+        <ul id="notes-list" class="styled-notes-list">
+            <li class="empty-state">Loading notes...</li>
+        </ul>
+      </aside>
+
+      <section class="card note-editor-card">
+        <div class="editor-toolbar">
+            <input type="text" id="note-title" placeholder="Untitled Note" class="title-input" />
+            <div class="editor-actions">
+                <button id="save-note-btn" class="btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Save
+                </button>
+            </div>
+        </div>
+        <textarea id="note-content" placeholder="Start typing your next big idea here..."></textarea>
+        <div class="editor-footer">
+            <small><i class="fa-solid fa-markdown"></i> Markdown supported (concept)</small>
+            <small id="word-count">0 words</small>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>Copyright &copy; Made with ❤️ by Xyz</p>
+  </footer>
+
+  <script src="learning.js"></script>
+</body>
+</html>

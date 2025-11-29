@@ -1,0 +1,1843 @@
+/* ====== 1. VARIABLES & THEME SYSTEM ====== */
+:root {
+  /* Brand Colors - Neon & Vibrant */
+  --primary: #8b5cf6;       
+  --primary-glow: rgba(139, 92, 246, 0.5);
+  --primary-soft: rgba(139, 92, 246, 0.15);
+  --secondary: #ec4b9e;     
+  --secondary-glow: rgba(236, 75, 158, 0.4);
+  --accent: #06b6d4;        
+  --accent-glow: rgba(6, 182, 212, 0.4);
+  
+  /* Backgrounds - Deep & Glassy */
+  --bg-body: #05050a;
+  --bg-blob: radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.15), transparent 25%), 
+             radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%),
+             radial-gradient(circle at 50% 100%, rgba(6, 182, 212, 0.08), transparent 30%);
+  --glass-surface: rgba(30, 41, 59, 0.45); 
+  --glass-surface-hover: rgba(30, 41, 59, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* Text Colors */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  
+  /* UI Elements */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --nav-height: 70px;
+  
+  /* Transitions */
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* Spacing Scale */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+}
+
+/* ====== 2. RESET & BASE ====== */
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+  font-family: "Inter", system-ui, -apple-system, sans-serif; 
+}
+
+body {
+  background-color: var(--bg-body);
+  background-image: var(--bg-blob);
+  background-attachment: fixed;
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--nav-height);
+  overflow-x: hidden;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { 
+  text-decoration: none; 
+  color: inherit; 
+  transition: var(--transition); 
+}
+
+button, input, select { 
+  font-family: inherit; 
+  outline: none; 
+  border: none; 
+}
+
+/* Scrollbar Styling - Enhanced */
+::-webkit-scrollbar { 
+  width: 10px; 
+  height: 10px;
+}
+
+::-webkit-scrollbar-track { 
+  background: var(--bg-body); 
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb { 
+  background: linear-gradient(180deg, var(--primary), var(--secondary));
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--bg-body);
+}
+
+::-webkit-scrollbar-thumb:hover { 
+  background: linear-gradient(180deg, var(--secondary), var(--primary));
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+/* Selection */
+::selection {
+  background: var(--primary-soft);
+  color: var(--text-main);
+}
+
+.smart-list {
+  list-style-type: none;
+  margin-left: var(--space-lg);
+  margin-bottom: var(--space-md);
+  color: var(--text-muted);
+}
+
+.smart-list strong {
+  color: var(--text-main);
+}
+
+.smart-list b {
+  color: var(--primary);
+}
+
+.main {
+  padding: var(--space-xl);
+  max-width: 1400px;
+  margin: 0 auto;
+  transition: margin-left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: 100%;
+}
+
+.overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-xl);
+  margin: 5rem;
+}
+
+/* ====== 3. COMPONENTS ====== */
+
+/* Glass Cards - Enhanced */
+.card, 
+.checklist-tasks-col, 
+.checklist-templates-col, 
+.categories {
+  background: var(--glass-surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: var(--space-2xl);
+}
+
+.card img {
+  width: 3rem;
+  border-radius: var(--radius-md);
+  margin-top: var(--space-md);
+}
+
+.card:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: var(--glass-surface-hover);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.2),
+              var(--glass-shadow),
+              inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-3px);
+}
+
+.card h3 {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-sm);
+  background: linear-gradient(135deg, #fff, var(--text-muted), var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card p {
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.card a:hover {
+  color: var(--secondary);
+}
+/* Subtle shimmer effect on glass cards */
+.checklist-tasks-col::before,
+.checklist-templates-col::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.03),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.checklist-tasks-col:hover::before,
+.checklist-templates-col:hover::before {
+  left: 100%;
+}
+
+.checklist-tasks-col:hover, 
+.checklist-templates-col:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: var(--glass-surface-hover);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.2),
+              var(--glass-shadow),
+              inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-3px);
+}
+
+/* Buttons - Modern & Clickable */
+.checklist-add-btn, 
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px var(--primary-glow);
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animated shine effect on button */
+.checklist-add-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.checklist-add-btn:hover::before {
+  left: 100%;
+}
+
+.checklist-add-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 30px var(--primary-glow),
+              0 0 20px var(--primary-glow);
+}
+
+.checklist-add-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Template & Category Buttons */
+.template-btn, 
+.category-btn, 
+.checklist-history-btn {
+  background: var(--glass-highlight);
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  margin: var(--space-sm) 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.template-btn::before,
+.category-btn::before,
+.checklist-history-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--primary), var(--secondary));
+  transform: scaleY(0);
+  transition: transform 0.3s var(--bounce);
+}
+
+.template-btn:hover::before,
+.category-btn:hover::before,
+.checklist-history-btn:hover::before {
+  transform: scaleY(1);
+}
+
+.template-btn:hover, 
+.category-btn:hover, 
+.checklist-history-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  border-color: var(--glass-border);
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.template-btn i,
+.category-btn i,
+.checklist-history-btn i {
+  transition: var(--transition);
+}
+
+.template-btn:hover i,
+.category-btn:hover i,
+.checklist-history-btn:hover i {
+  transform: scale(1.1);
+  color: var(--primary);
+}
+
+/* Inputs & Selects */
+input[type="text"], 
+select {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+  font-size: 0.95rem;
+}
+
+input:focus, 
+select:focus {
+  border-color: var(--primary);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15),
+              0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ====== 4. NAVBAR & LAYOUT ====== */
+.navbar {
+  position: fixed;
+  top: 0; 
+  left: 0; 
+  right: 0;
+  height: var(--nav-height);
+  background: rgba(5, 5, 10, 0.85);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-xl);
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.logo { 
+  height: 2.5rem; 
+  filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.4));
+  transition: var(--transition);
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6));
+  transform: scale(1.05);
+}
+
+.username { 
+  display: flex; 
+  align-items: center; 
+  gap: var(--space-sm); 
+  font-weight: 500; 
+  font-size: 0.9rem;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--glass-highlight);
+  border: 1px solid var(--glass-border);
+  transition: var(--transition);
+}
+
+.username:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--primary);
+}
+
+.username i { 
+  font-size: 1.1rem;
+  color: var(--primary);
+}
+
+/* Sidebar - Floating on Desktop */
+.sidebar {
+  position: fixed;
+  top: calc(var(--nav-height) + 1rem);
+  left: 1rem;
+  bottom: 1rem;
+  width: 240px;
+  background: var(--glass-surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl) var(--space-md);
+  z-index: 90;
+  transform: translateX(-120%);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease,
+              opacity 0.3s ease;
+  box-shadow: var(--glass-shadow);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar.open { 
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+  box-shadow: var(--glass-shadow),
+              0 0 40px rgba(139, 92, 246, 0.15);
+}
+
+.sidebar h2 { 
+  font-size: 0.7rem; 
+  text-transform: uppercase; 
+  letter-spacing: 1.5px; 
+  color: var(--text-dim); 
+  margin-bottom: var(--space-lg); 
+  padding-left: var(--space-md); 
+  font-weight: 700;
+}
+
+.sidebar li { 
+  margin-bottom: var(--space-xs);
+  list-style-type: none;
+}
+
+.sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar a::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--primary), var(--secondary));
+  transform: scaleY(0);
+  transition: transform 0.3s var(--bounce);
+}
+
+.sidebar a:hover::before,
+.sidebar a.active::before {
+  transform: scaleY(1);
+}
+
+.sidebar a:hover, 
+.sidebar a.active {
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.12), transparent);
+  color: var(--primary);
+  transform: translateX(3px);
+}
+
+.sidebar a i {
+  font-size: 1.1rem;
+  transition: var(--transition);
+}
+
+.sidebar a:hover i,
+.sidebar a.active i {
+  transform: scale(1.15);
+}
+
+/* Burger Button */
+.burger {
+  position: fixed;
+  bottom: var(--space-xl); 
+  right: var(--space-xl);
+  width: 56px; 
+  height: 56px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 50%;
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  align-items: center; 
+  gap: 4px;
+  cursor: pointer; 
+  z-index: 101;
+  box-shadow: 0 4px 24px var(--primary-glow);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: var(--transition);
+}
+
+/* Overlay pour mobile/tablet */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 89;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.burger:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 30px var(--primary-glow),
+              0 0 20px var(--primary-glow);
+}
+
+.burger:active {
+  transform: scale(0.95);
+}
+
+.burger div { 
+  width: 22px; 
+  height: 2.5px; 
+  background: white; 
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+/* ====== 5. MAIN CHECKLIST UI ====== */
+.checklist-main {
+  padding: var(--space-xl);
+  max-width: 1400px;
+  margin: 0 auto;
+  transition: margin 0.3s ease;
+  width: 100%;
+}
+
+.header { 
+  text-align: center; 
+  margin-bottom: var(--space-3xl); 
+  animation: fadeInDown 0.8s var(--bounce);
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header h1 { 
+  font-size: 3rem; 
+  font-weight: 800; 
+  background: linear-gradient(135deg, #fff, var(--text-muted), var(--primary)); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.header p { 
+  color: var(--text-muted); 
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+
+/* Progress Bar - Enhanced Glow */
+.checklist-progress-container { 
+  margin-bottom: var(--space-3xl); 
+  position: relative;
+  animation: fadeIn 1s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.checklist-progress-label { 
+  display: flex; 
+  justify-content: space-between; 
+  margin-bottom: var(--space-md); 
+  font-weight: 600; 
+  color: var(--accent); 
+  font-size: 0.9rem; 
+}
+
+.checklist-progress-bar-bg { 
+  width: 100%; 
+  height: 10px; 
+  background: rgba(255, 255, 255, 0.05); 
+  border-radius: var(--radius-md); 
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.checklist-progress-bar-fill { 
+  height: 100%; 
+  background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent)); 
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+  box-shadow: 0 0 20px var(--primary-glow),
+              0 0 10px var(--secondary-glow);
+  width: 0%;
+  transition: width 0.6s var(--bounce);
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Task Layout */
+.checklist-flex { 
+  display: grid; 
+  grid-template-columns: 2fr 1fr; 
+  gap: var(--space-xl);
+  animation: fadeInUp 0.8s var(--bounce);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Task Items - Enhanced */
+.checklist-task-item {
+  display: flex; 
+  align-items: center; 
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--glass-border);
+  transition: var(--transition);
+  animation: slideIn 0.4s ease forwards;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes slideIn { 
+  from { 
+    opacity: 0; 
+    transform: translateX(-10px); 
+  } 
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  } 
+}
+
+.checklist-task-item:hover { 
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(139, 92, 246, 0.3);
+  transform: translateX(3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.checklist-task-item.completed .checklist-task-label { 
+  text-decoration: line-through; 
+  opacity: 0.4; 
+  color: var(--text-muted); 
+}
+
+/* Custom Checkbox - Enhanced */
+.checklist-task-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 24px; 
+  height: 24px;
+  border: 2px solid var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.checklist-task-checkbox:hover {
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+.checklist-task-checkbox:checked {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-color: var(--primary);
+  box-shadow: 0 0 15px var(--primary-glow),
+              0 0 5px var(--secondary-glow);
+  animation: checkboxPop 0.3s var(--bounce);
+}
+
+@keyframes checkboxPop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.checklist-task-checkbox:checked::after {
+  content: '✓';
+  position: absolute; 
+  top: 50%; 
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px; 
+  color: white;
+  font-weight: 700;
+}
+
+.checklist-task-label {
+  flex: 1; 
+  font-size: 1rem; 
+  padding: var(--space-xs); 
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  background: transparent;
+}
+
+.checklist-task-label:focus { 
+  background: rgba(0, 0, 0, 0.5); 
+  outline: 2px solid var(--primary); 
+  outline-offset: 2px;
+}
+
+/* Action Buttons */
+.checklist-task-controls { 
+  display: flex; 
+  gap: var(--space-xs); 
+  opacity: 0; 
+  transition: opacity 0.2s ease; 
+}
+
+.checklist-task-item:hover .checklist-task-controls { 
+  opacity: 1; 
+}
+
+.checklist-action-btn {
+  background: transparent;
+  color: var(--text-muted);
+  padding: 6px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.checklist-action-btn:hover { 
+  color: var(--secondary); 
+  background: rgba(236, 75, 158, 0.1);
+  transform: scale(1.1);
+}
+
+/* Categories Grid */
+.categories { 
+  grid-column: 1 / -1; 
+  margin-top: var(--space-xl); 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center;
+}
+
+.categories-list { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: var(--space-md); 
+  justify-content: center; 
+}
+
+.category-btn { 
+  width: auto; 
+  background: rgba(6, 182, 212, 0.1); 
+  color: var(--accent); 
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  padding-right: 2.5rem;
+  position: relative;
+}
+
+.category-btn:hover { 
+  background: rgba(6, 182, 212, 0.2);
+  color: var(--accent); 
+  box-shadow: 0 0 20px var(--accent-glow);
+  border-color: var(--accent);
+}
+
+.category-delete {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  transition: var(--transition);
+  z-index: 2;
+}
+
+.category-delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  transform: translateY(-50%) scale(1.2);
+}
+
+/* Template Delete */
+.user-tpl {
+  justify-content: space-between;
+  padding-right: var(--space-md);
+}
+
+.template-delete {
+  opacity: 0;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  font-size: 0.9rem;
+}
+
+.user-tpl:hover .template-delete {
+  opacity: 1;
+}
+
+.template-delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  transform: scale(1.1);
+}
+
+/* Quote Section */
+.quote {
+  text-align: center;
+  margin-top: var(--space-3xl);
+  opacity: 0.6;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  animation: fadeIn 1.5s ease 0.5s backwards;
+}
+
+/* Footer */
+.footer {
+  margin-top: auto; 
+  padding: var(--space-xl); 
+  text-align: center; 
+  color: var(--text-dim); 
+  font-size: 0.85rem;
+  border-top: 1px solid var(--glass-border); 
+  background: rgba(5, 5, 10, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+/* ====== 6. LEARNING PAGE SPECIFIC ====== */
+
+/* Layout Grid: 300px sidebar, rest is editor */
+.learning-container {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: var(--space-xl);
+    height: calc(100vh - 250px); /* Fill screen height */
+    min-height: 600px;
+    animation: fadeInUp 0.8s var(--bounce);
+}
+
+/* Sidebar Styling */
+.notes-sidebar-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-lg);
+    height: 100%;
+}
+
+.notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+.notes-header h3 {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+/* Search Bar refinement */
+.search-wrapper {
+    position: relative;
+    margin-bottom: var(--space-md);
+}
+
+.search-wrapper input {
+    width: 100%;
+    padding-left: 2.5rem;
+    background: rgba(0,0,0,0.2);
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 0.9rem;
+}
+
+/* Notes List Scrolling */
+.styled-notes-list {
+    list-style: none;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 5px;
+}
+
+/* Individual Note Item styling matching your Template Buttons */
+.note-item {
+    display: flex;
+    justify-content: space-between; /* Pushes text left, button right */
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-sm);
+    transition: var(--transition);
+}
+
+.note-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--primary-soft);
+    transform: translateX(4px);
+}
+
+.note-info {
+    flex: 1; /* Takes up all available space */
+    cursor: pointer;
+}
+
+.note-item strong {
+    display: block;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.note-item small {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+}
+
+.delete-note-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    padding: 8px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: var(--transition);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.delete-note-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Editor Card Styling */
+.note-editor-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: var(--space-xl);
+}
+
+.editor-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    gap: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.title-input {
+    flex: 1;
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 1rem !important;
+    color: var(--text-main);
+    min-width: 200px;
+}
+
+.title-input::placeholder {
+    color: var(--text-dim);
+    opacity: 0.5;
+}
+
+/* Main Text Area styling to match input themes */
+#note-content {
+    flex: 1;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.7;
+    resize: none;
+    transition: var(--transition);
+    font-family: "Inter", sans-serif;
+}
+
+#note-content:focus {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: var(--primary);
+    outline: none;
+    color: var(--text-main);
+}
+
+.editor-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--space-md);
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.google-login {
+  background: var(--text-dim);
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 2rem;
+  margin: 2rem auto;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: var(--text-muted);
+}
+
+.google-login img {
+margin-left: 0.5rem;
+height: 1.5rem;
+width: auto;
+}
+
+.google-login:hover { 
+  color: var(--secondary); 
+  background: rgba(66, 133, 244, 0.1);
+  transform: scale(1.1);
+}
+
+/* ====== 8. CIRCULAR DASHBOARD (NEW) ====== */
+.dashboard-wrapper {
+  margin-bottom: var(--space-2xl);
+  animation: fadeInUp 0.6s ease;
+}
+
+.dashboard-card {
+  background: var(--glass-surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--glass-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3xl);
+  flex-wrap: wrap;
+}
+
+/* Chart Positioning */
+.chart-container {
+  position: relative;
+  width: 280px;
+  height: 280px;
+}
+
+.chart-center-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none; /* Let clicks pass through to chart */
+}
+
+#dashboard-percentage {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: block;
+  line-height: 1;
+}
+
+.chart-center-text small {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Custom Legend styling to match the "Image" feel */
+.dashboard-legend {
+  max-width: 400px;
+}
+
+.dashboard-legend h3 {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-xs);
+  color: var(--text-main);
+}
+
+.dashboard-legend p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: var(--space-lg);
+}
+
+#dashboard-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  list-style: none;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  transition: var(--transition);
+}
+
+.legend-item.active {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-content {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-lg);
+  }
+  
+  .dashboard-legend {
+    width: 100%;
+  }
+
+  .chart-container {
+    width: 220px;
+    height: 220px;
+  }
+  
+  #dashboard-percentage {
+    font-size: 2.2rem;
+  }
+}
+/* ====== 7. RESPONSIVE DESIGN - FIXED & ENHANCED ====== */
+
+/* Large Desktop - 1440px+ */
+@media (min-width: 1440px) {
+  .sidebar.open ~ .checklist-main,
+  .sidebar.open ~ .main { 
+    margin-left: 260px; 
+  }
+}
+
+/* Desktop - 1024px to 1439px */
+@media (min-width: 1024px) {
+  .sidebar { 
+    width: 220px; 
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .sidebar.open ~ .checklist-main,
+  .sidebar.open ~ .main { 
+    margin-left: 240px; 
+  }
+  
+  .burger { 
+    display: flex;
+  }
+  
+  .sidebar-overlay {
+    display: none;
+  }
+}
+
+/* Tablet Landscape - 768px to 1023px */
+@media (max-width: 1023px) {
+  :root {
+    --nav-height: 65px;
+    --space-xl: 1.5rem;
+    --space-2xl: 2rem;
+    --space-3xl: 3rem;
+  }
+  
+  .navbar {
+    padding: 0 var(--space-lg);
+  }
+  
+  .logo {
+    height: 2.2rem;
+  }
+  
+  .username span {
+    display: none; /* Hide username text on tablet */
+  }
+  
+  .sidebar {
+    width: 280px;
+    top: calc(var(--nav-height) + 0.5rem);
+    left: 0.5rem;
+    bottom: 0.5rem;
+  }
+  
+  .checklist-flex { 
+    grid-template-columns: 1fr; 
+    gap: var(--space-lg);
+  }
+  
+  .checklist-main,
+  .main { 
+    margin-left: 0 !important; 
+    padding: var(--space-lg); 
+  }
+  
+  .header h1 { 
+    font-size: 2.5rem; 
+  }
+  
+  .header p {
+    font-size: 1rem;
+  }
+  
+  .overview {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-lg);
+    margin: var(--space-2xl);
+  }
+  
+  /* Learning page responsive */
+  .learning-container {
+    grid-template-columns: 1fr;
+    height: auto;
+    gap: var(--space-lg);
+  }
+  
+  .notes-sidebar-card {
+    height: 400px;
+    padding: var(--space-md);
+  }
+  
+  .note-editor-card {
+    min-height: 500px;
+    padding: var(--space-lg);
+  }
+  
+  .title-input {
+    font-size: 1.3rem;
+  }
+  
+  /* Cards adjustments */
+  .card, 
+  .checklist-tasks-col, 
+  .checklist-templates-col, 
+  .categories {
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+  }
+  
+  .burger {
+    width: 54px;
+    height: 54px;
+    bottom: var(--space-lg);
+    right: var(--space-lg);
+  }
+}
+
+/* Tablet Portrait & Large Mobile - 600px to 767px */
+@media (max-width: 767px) {
+  :root {
+    --nav-height: 60px;
+    --space-xs: 0.4rem;
+    --space-sm: 0.6rem;
+    --space-md: 0.8rem;
+    --space-lg: 1rem;
+    --space-xl: 1.25rem;
+    --space-2xl: 1.5rem;
+    --space-3xl: 2rem;
+  }
+  
+  body {
+    font-size: 15px;
+  }
+  
+  .navbar {
+    padding: 0 var(--space-md);
+    height: var(--nav-height);
+  }
+  
+  .logo {
+    height: 2rem;
+  }
+  
+  .username {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.85rem;
+  }
+  
+  .username span {
+    display: none;
+  }
+  
+  .sidebar {
+    width: 260px;
+    top: var(--nav-height);
+    left: 0;
+    bottom: 0;
+    border-radius: 0;
+    padding: var(--space-lg) var(--space-md);
+  }
+  
+  .checklist-main,
+  .main {
+    padding: var(--space-md);
+    margin-left: 0 !important;
+  }
+  
+  .header {
+    margin-bottom: var(--space-2xl);
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+    line-height: 1.1;
+  }
+  
+  .header p {
+    font-size: 0.95rem;
+  }
+  
+  .overview {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+    margin: var(--space-lg);
+  }
+  
+  /* Progress bar adjustments */
+  .checklist-progress-container {
+    margin-bottom: var(--space-2xl);
+  }
+  
+  .checklist-progress-label {
+    font-size: 0.85rem;
+    flex-direction: column;
+    gap: var(--space-xs);
+    align-items: flex-start;
+  }
+  
+  .checklist-progress-bar-bg {
+    height: 8px;
+  }
+  
+  /* Cards on mobile */
+  .card, 
+  .checklist-tasks-col, 
+  .checklist-templates-col, 
+  .categories {
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+    border-radius: var(--radius-md);
+  }
+  
+  .card h3 {
+    font-size: 1.25rem;
+  }
+  
+  /* Task items mobile optimization */
+  .checklist-task-item {
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    flex-wrap: wrap;
+  }
+  
+  .checklist-task-checkbox {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .checklist-task-label {
+    font-size: 0.95rem;
+  }
+  
+  .checklist-task-controls {
+    opacity: 1; /* Always visible on mobile */
+  }
+  
+  .checklist-action-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1.1rem;
+  }
+  
+  /* Buttons mobile sizing */
+  .checklist-add-btn,
+  .btn-primary {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .template-btn,
+  .category-btn,
+  .checklist-history-btn {
+    padding: var(--space-sm);
+    font-size: 0.85rem;
+    gap: 8px;
+  }
+  
+  /* Categories mobile */
+  .categories-list {
+    gap: var(--space-sm);
+  }
+  
+  .category-btn {
+    padding: var(--space-xs) var(--space-md);
+    padding-right: 2rem;
+    font-size: 0.8rem;
+  }
+  
+  /* Learning page mobile */
+  .learning-container {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: auto;
+    gap: var(--space-md);
+  }
+  
+  .notes-sidebar-card {
+    height: 350px;
+    padding: var(--space-md);
+  }
+  
+  .notes-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .note-item {
+    padding: var(--space-sm);
+  }
+  
+  .note-item strong {
+    font-size: 0.9rem;
+  }
+  
+  .note-item small {
+    font-size: 0.75rem;
+  }
+  
+  .note-editor-card {
+    min-height: 450px;
+    padding: var(--space-md);
+  }
+  
+  .editor-toolbar {
+    gap: var(--space-sm);
+  }
+  
+  .title-input {
+    font-size: 1.2rem;
+    padding: var(--space-sm) !important;
+    min-width: 150px;
+  }
+  
+  #note-content {
+    padding: var(--space-md);
+    font-size: 0.95rem;
+  }
+  
+  .editor-footer {
+    font-size: 0.8rem;
+  }
+  
+  /* Burger button mobile */
+  .burger {
+    width: 52px;
+    height: 52px;
+    bottom: var(--space-md);
+    right: var(--space-md);
+  }
+  
+  .burger div {
+    width: 20px;
+    height: 2px;
+  }
+  
+  /* Footer mobile */
+  .footer {
+    padding: var(--space-md);
+    font-size: 0.8rem;
+  }
+  
+  /* Quote mobile */
+  .quote {
+    font-size: 0.95rem;
+    margin-top: var(--space-2xl);
+    padding: 0 var(--space-md);
+  }
+}
+
+/* Small Mobile - Under 600px */
+@media (max-width: 599px) {
+  :root {
+    --nav-height: 56px;
+    --space-xs: 0.35rem;
+    --space-sm: 0.5rem;
+    --space-md: 0.7rem;
+    --space-lg: 0.9rem;
+    --space-xl: 1.1rem;
+    --space-2xl: 1.3rem;
+    --space-3xl: 1.5rem;
+  }
+  
+  body {
+    font-size: 14px;
+  }
+  
+  .navbar {
+    padding: 0 var(--space-sm);
+  }
+  
+  .logo {
+    height: 1.8rem;
+  }
+  
+  .username {
+    padding: 6px;
+  }
+  
+  .username i {
+    font-size: 1rem;
+  }
+  
+  .sidebar {
+    width: 240px;
+  }
+  
+  .header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .header p {
+    font-size: 0.9rem;
+  }
+  
+  .checklist-main,
+  .main {
+    padding: var(--space-sm);
+  }
+  
+  .card, 
+  .checklist-tasks-col, 
+  .checklist-templates-col, 
+  .categories {
+    padding: var(--space-sm) var(--space-md);
+  }
+  
+  .card h3 {
+    font-size: 1.1rem;
+  }
+  
+  .checklist-task-item {
+    padding: var(--space-xs) var(--space-sm);
+  }
+  
+  .checklist-task-checkbox {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .checklist-task-label {
+    font-size: 0.9rem;
+  }
+  
+  .checklist-add-btn,
+  .btn-primary {
+    padding: 0.55rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .template-btn,
+  .category-btn,
+  .checklist-history-btn {
+    font-size: 0.8rem;
+    padding: var(--space-xs) var(--space-sm);
+  }
+  
+  .notes-sidebar-card {
+    height: 300px;
+    padding: var(--space-sm);
+  }
+  
+  .note-editor-card {
+    min-height: 400px;
+    padding: var(--space-sm);
+  }
+  
+  .title-input {
+    font-size: 1.1rem;
+  }
+  
+  #note-content {
+    font-size: 0.9rem;
+  }
+  
+  .burger {
+    width: 48px;
+    height: 48px;
+    bottom: var(--space-sm);
+    right: var(--space-sm);
+  }
+  
+  .burger div {
+    width: 18px;
+  }
+}
+
+/* Extra Small Mobile - Under 400px */
+@media (max-width: 399px) {
+  :root {
+    --nav-height: 52px;
+  }
+  
+  body {
+    font-size: 13px;
+  }
+  
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header p {
+    font-size: 0.85rem;
+  }
+  
+  .sidebar {
+    width: 220px;
+  }
+  
+  .logo {
+    height: 1.6rem;
+  }
+  
+  .card h3 {
+    font-size: 1rem;
+  }
+  
+  .checklist-task-label {
+    font-size: 0.85rem;
+  }
+  
+  .title-input {
+    font-size: 1rem;
+  }
+  
+  .burger {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Landscape orientation adjustments for mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --nav-height: 50px;
+  }
+  
+  .header {
+    margin-bottom: var(--space-lg);
+  }
+  
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .header p {
+    font-size: 0.85rem;
+  }
+  
+  .sidebar {
+    top: var(--nav-height);
+    bottom: 0;
+  }
+  
+  .burger {
+    bottom: var(--space-sm);
+    right: var(--space-sm);
+    width: 44px;
+    height: 44px;
+  }
+  
+  .learning-container {
+    height: auto;
+    min-height: auto;
+  }
+  
+  .notes-sidebar-card {
+    height: 250px;
+  }
+  
+  .note-editor-card {
+    min-height: 300px;
+  }
+}
+
+/* High resolution displays optimization */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body {
+    -webkit-font-smoothing: subpixel-antialiased;
+  }
+  
+  .glass-border {
+    border-width: 0.5px;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

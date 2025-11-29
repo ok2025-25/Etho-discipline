@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | Etho Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="home.html">
+                <img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Etho Logo" class="logo">
+            </a>
+        </div>
+        <div class="navbar-right">
+            <span class="username" id="navbar-username">
+                <i class="fa-regular fa-circle-user"></i> User
+            </span>
+        </div>
+    </nav>
+
+    <aside class="sidebar" id="sidebar">
+        <h2>Menu</h2>
+        <nav>
+            <ul>
+                <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+                <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+                <li><a href="tracker.html"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
+                <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
+                <li><a href="profile.html" class="active"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+                <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <div class="burger" id="sidebar-toggle">
+        <div></div><div></div><div></div>
+    </div>
+
+    <main class="main">
+        <header class="header">
+            <h1><i class="fa-solid fa-user-circle" style="color: var(--primary);"></i> My Profile</h1>
+            <p>Manage your account settings and preferences</p>
+        </header>
+
+        <div id="message" class="message"></div>
+
+        <section class="card" style="max-width: 600px; margin: 0 auto;">
+            <!-- Avatar Section -->
+            <div style="text-align: center; margin-bottom: var(--space-2xl);">
+                <div style="position: relative; display: inline-block;">
+                    <img id="profile-avatar" src="https://ui-avatars.com/api/?name=User&size=120&background=8b5cf6&color=fff" 
+                         alt="Profile Avatar" 
+                         style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--primary); box-shadow: 0 0 20px var(--primary-glow);">
+                    <label for="avatar-upload" style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                        <i class="fa-solid fa-camera"></i>
+                    </label>
+                    <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+                </div>
+                <p style="margin-top: var(--space-md); color: var(--text-muted); font-size: 0.85rem;">Click camera icon to upload new avatar</p>
+            </div>
+
+            <!-- Profile Form -->
+            <form id="profile-form">
+                <div style="margin-bottom: var(--space-lg);">
+                    <label style="display: block; margin-bottom: var(--space-sm); color: var(--text-muted); font-weight: 600;">
+                        <i class="fa-solid fa-user"></i> Username
+                    </label>
+                    <input type="text" id="username" required minlength="3" maxlength="20" 
+                           style="width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); color: var(--text-main); padding: 0.75rem 1rem; border-radius: var(--radius-md);">
+                </div>
+
+                <div style="margin-bottom: var(--space-lg);">
+                    <label style="display: block; margin-bottom: var(--space-sm); color: var(--text-muted); font-weight: 600;">
+                        <i class="fa-solid fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="email" disabled 
+                           style="width: 100%; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); color: var(--text-dim); padding: 0.75rem 1rem; border-radius: var(--radius-md); cursor: not-allowed;">
+                    <small style="color: var(--text-dim); font-size: 0.8rem; display: block; margin-top: 0.25rem;">Email cannot be changed</small>
+                </div>
+
+                <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
+                    <button type="submit" class="checklist-add-btn" style="flex: 1;">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                    <button type="button" id="logout-btn" class="checklist-action-btn" style="flex: 1; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 600; border-radius: var(--radius-md);">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </button>
+                </div>
+            </form>
+
+            <!-- Danger Zone -->
+            <div style="margin-top: var(--space-3xl); padding-top: var(--space-xl); border-top: 1px solid var(--glass-border);">
+                <h3 style="color: #ef4444; margin-bottom: var(--space-md); font-size: 1rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--space-md);">
+                    Deleting your account is permanent and cannot be undone.
+                </p>
+                <button id="delete-account-btn" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 0.6rem 1.2rem; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); font-size: 0.85rem;">
+                    <i class="fa-solid fa-trash"></i> Delete Account
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 Etho Dashboard. Crafted with Focus.</p>
+    </footer>
+
+    <script src="profile.js"></script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Dashboard – Goals</title>
+    <link rel="stylesheet" href="styles.css">
+  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- ========== NAVBAR ========== -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="home.html"><img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Logo" class="logo"></a>
+        </div>
+        <div class="navbar-right">
+            <span class="username"><i class="fa-solid fa-user"></i> User</span>
+        </div>
+    </nav>
+
+    <!-- ========== SIDEBAR BURGER ========== -->
+    <div class="burger" id="burger-menu" tabindex="0" aria-label="Open sidebar" aria-controls="sidebar">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar" id="sidebar">
+        <h2>Menu</h2>
+        <nav>
+            <ul>
+                <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+                <li><a href="goals.html" class="active"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+                <li><a href="tracker.html"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
+                <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
+                <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main goals-main">
+        <!-- Header Section -->
+        <section class="header">
+            <h1><i class="fa-solid fa-bullseye" style="color: var(--primary);"></i> My Goals</h1>
+            <p>Track your SMART goals, celebrate progress, and achieve your dreams</p>
+        </section>
+
+        <!-- Dashboard Overview Cards -->
+        <section class="overview" style="margin-bottom: 3rem;">
+            <!-- Summary Card -->
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3><i class="fa-solid fa-chart-pie"></i> Dashboard Summary</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1.5rem;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary);" id="goals-total">0</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Total Goals</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2.5rem; font-weight: 700; color: var(--accent);" id="goals-completed">0</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Completed</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2.5rem; font-weight: 700; color: var(--secondary);" id="goals-remaining">0</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">In Progress</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem;">
+                    <div class="checklist-progress-label">
+                        <span><i class="fa-solid fa-rocket"></i> Overall Progress</span>
+                        <span id="overall-progress-percent">0%</span>
+                    </div>
+                    <div class="checklist-progress-bar-bg">
+                        <div class="checklist-progress-bar-fill" id="overall-progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SMART Info Card -->
+            <div class="card">
+                <h3><i class="fa-solid fa-lightbulb"></i> What is a SMART Goal?</h3>
+                <ul class="smart-list" style="margin-top: 1rem;">
+                    <li style="margin-bottom: 0.75rem;"><b>S</b> – <strong>Specific:</strong> Clear, well-defined objective</li>
+                    <li style="margin-bottom: 0.75rem;"><b>M</b> – <strong>Measurable:</strong> Track progress numerically</li>
+                    <li style="margin-bottom: 0.75rem;"><b>A</b> – <strong>Achievable:</strong> Realistic and within reach</li>
+                    <li style="margin-bottom: 0.75rem;"><b>R</b> – <strong>Relevant:</strong> Aligns with priorities</li>
+                    <li style="margin-bottom: 0;"><b>T</b> – <strong>Time-bound:</strong> Has a deadline</li>
+                </ul>
+            </div>
+
+            <!-- Templates Card -->
+            <div class="card">
+                <h3><i class="fa-solid fa-bookmark"></i> Quick Start Templates</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">Select a template to create your first goal</p>
+                <div id="goal-templates-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Goals List Section -->
+        <section class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fa-solid fa-list-check"></i> My Goals
+                </h2>
+                <button id="add-goal-btn" class="checklist-add-btn" title="Add new goal" aria-label="Add new goal">
+                    <i class="fa-solid fa-plus"></i> New Goal
+                </button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" style="display: none; text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                <i class="fa-solid fa-bullseye" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No goals yet!</p>
+                <p style="font-size: 0.9rem;">Create your first SMART goal to get started on your journey</p>
+            </div>
+
+            <!-- Goals Grid -->
+            <div id="goals-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- Planner Section (Hidden by default) -->
+        <section class="card" id="goals-planner-section" style="display: none;" aria-live="polite">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="fa-solid fa-clipboard-list"></i> Action Plan: <span id="planner-goal-title" style="color: var(--primary);"></span>
+                </h3>
+                <button id="close-planner-btn" class="checklist-action-btn" style="font-size: 1.5rem;" title="Close planner">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">
+                Break down your goal into actionable steps and track your progress
+            </p>
+
+            <!-- Steps List -->
+            <div id="planner-steps-list" style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Add Step Input -->
+            <div style="display: flex; gap: 0.75rem;">
+                <input type="text" id="planner-step-input" placeholder="Add a new milestone or step..." 
+                       maxlength="120" aria-label="Add a step"
+                       style="flex: 1; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); 
+                              color: var(--text-main); padding: 0.75rem 1rem; border-radius: var(--radius-md); 
+                              font-size: 0.95rem;">
+                <button id="planner-add-step-btn" class="checklist-add-btn" aria-label="Add step">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- ========== MOTIVATIONAL QUOTE ========== -->
+    <div class="quote" id="motivational-quote">
+        <!-- Populated by JS -->
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <p>Copyright ©. Made with ❤️ by Xyz</p>
+    </footer>
+
+    <!-- ========== GOALS MODAL (ADD/EDIT) ========== -->
+    <div class="modal" id="goals-modal" style="display: none;">
+        <div class="modal-content" style="background: var(--glass-surface); backdrop-filter: blur(20px); 
+                                           border: 1px solid var(--glass-border); border-radius: var(--radius-lg); 
+                                           padding: 2rem; max-width: 500px; width: 90%;">
+            <h3 id="modal-title" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fa-solid fa-bullseye"></i> Add New Goal
+            </h3>
+            <form id="goal-form">
+                <div style="margin-bottom: 1.25rem;">
+                    <label for="goal-title" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">
+                        Goal Title <span style="color: var(--secondary);">*</span>
+                    </label>
+                    <input type="text" id="goal-title" name="title" required maxlength="80" 
+                           placeholder="e.g., Read 20 books in 2025"
+                           style="width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); 
+                                  color: var(--text-main); padding: 0.75rem 1rem; border-radius: var(--radius-md); 
+                                  font-size: 0.95rem;">
+                </div>
+
+                <div style="margin-bottom: 1.25rem;">
+                    <label for="goal-type" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">
+                        Goal Type
+                    </label>
+                    <select id="goal-type" name="type"
+                            style="width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); 
+                                   color: var(--text-main); padding: 0.75rem 1rem; border-radius: var(--radius-md); 
+                                   font-size: 0.95rem; cursor: pointer;">
+                        <option value="numeric">Numeric (e.g., 10kg, 52 books)</option>
+                        <option value="descriptive">Milestone-Based</option>
+                    </select>
+                </div>
+
+                <div id="target-number-group" style="margin-bottom: 1.25rem; display: none;">
+                    <label for="goal-target-number" id="goal-target-label" 
+                           style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">
+                        Target Number
+                    </label>
+                    <input type="number" min="1" id="goal-target-number" name="targetNumber" placeholder="e.g., 20"
+                           style="width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); 
+                                  color: var(--text-main); padding: 0.75rem 1rem; border-radius: var(--radius-md); 
+                                  font-size: 0.95rem;">
+                </div>
+
+                <div style="margin-bottom: 1.25rem;">
+                    <label for="goal-deadline" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">
+                        Deadline (optional)
+                    </label>
+                    <input type="date" id="goal-deadline" name="deadline"
+                           style="width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); 
+                                  color: var(--text-main); padding: 0.75rem 1rem; border-radius: var(--radius-md); 
+                                  font-size: 0.95rem;">
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="goal-desc" style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">
+                        Description (optional)
+                    </label>
+                    <textarea id="goal-desc" name="desc" rows="3" maxlength="300" 
+                              placeholder="Describe your goal and why it matters to you..."
+                              style="width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); 
+                                     color: var(--text-main); padding: 0.75rem 1rem; border-radius: var(--radius-md); 
+                                     font-size: 0.95rem; resize: vertical; font-family: inherit;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                    <button type="button" id="modal-cancel-btn" 
+                            style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted); 
+                                   padding: 0.75rem 1.5rem; border-radius: var(--radius-md); cursor: pointer; 
+                                   transition: var(--transition); border: 1px solid var(--glass-border);">
+                        Cancel
+                    </button>
+                    <button type="submit" id="modal-save-btn" class="checklist-add-btn">
+                        <i class="fa-solid fa-check"></i> Save Goal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== GOALS JS ========== -->
+    <script src="goals.js"></script>
+</body>
+</html>
