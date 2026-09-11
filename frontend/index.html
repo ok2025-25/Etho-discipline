@@ -1,288 +1,1145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Etho Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
-  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: var(--space-xl);
-        }
+  <script>
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    window.location.replace("login.html");
+  }
+  // Apply any previously-chosen theme immediately, before first paint,
+  // so returning visitors don't see a flash of the wrong theme. Uses
+  // the same "ethoTheme" localStorage key the logged-in app uses
+  // (auth.js), so a preference set here carries over once someone
+  // signs in on the same browser.
+  try {
+    const storedTheme = JSON.parse(localStorage.getItem("ethoTheme") || '"light"');
+    if (storedTheme === "dark") document.documentElement.setAttribute("data-theme", "dark");
+  } catch (e) { /* default to light */ }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Etho — Build the Life You Want</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="./images/favicon.ico">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S6Q5FLHV4G"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-        .auth-container {
-            width: 100%;
-            max-width: 450px;
-            background: var(--glass-surface);
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-3xl);
-            box-shadow: var(--glass-shadow);
-            animation: fadeInUp 0.6s var(--bounce);
-        }
+  gtag('config', 'G-S6Q5FLHV4G');
+</script>
 
-        .auth-logo {
-            text-align: center;
-            margin-bottom: var(--space-2xl);
-        }
+  <style>
+    /* ===== LANDING PAGE OVERRIDES ===== */
+    /* This page used to hardcode the dark theme's literal red/black values
+       (#E8001C, rgba(8,2,2,...) etc.) instead of the theme variables from
+       styles.css, so it looked fine in dark mode but broken in light mode
+       (invisible white gradient text, near-black navbar/shadows on a cream
+       page). These RGB triplets mirror --primary/--secondary/--accent per
+       theme so rgba()/gradient values below can adapt automatically. */
+    :root {
+      --lp-primary-rgb: 196, 40, 63;
+      --lp-secondary-rgb: 122, 20, 32;
+      --lp-accent-rgb: 176, 48, 74;
+    }
+    html[data-theme="dark"] {
+      --lp-primary-rgb: 232, 0, 28;
+      --lp-secondary-rgb: 139, 0, 0;
+      --lp-accent-rgb: 255, 68, 68;
+    }
 
-        .auth-logo img {
-            height: 60px;
-            filter: drop-shadow(0 0 0.5px var(--primary-glow));
-        }
+    body {
+      padding-top: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
 
-        .auth-logo h1 {
-            font-size: 1.8rem;
-            margin-top: var(--space-md);
-            background: linear-gradient(135deg, #fff, var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    /* ===== ANIMATED BACKGROUND ===== */
+    .landing-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
 
-        .auth-logo p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-top: var(--space-xs);
-        }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.22;
+      animation: orbFloat 12s ease-in-out infinite;
+    }
+    html[data-theme="dark"] .orb { opacity: 0.35; }
 
-        .form-group {
-            margin-bottom: var(--space-lg);
-        }
+    .orb-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgb(var(--lp-primary-rgb)), transparent 70%);
+      top: -100px; left: -100px;
+      animation-delay: 0s;
+    }
 
-        .form-group label {
-            display: block;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: var(--space-sm);
-        }
+    .orb-2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgb(var(--lp-secondary-rgb)), transparent 70%);
+      top: 20%; right: -100px;
+      animation-delay: -4s;
+    }
 
-        .password-wrapper {
-            position: relative;
-        }
+    .orb-3 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgb(var(--lp-accent-rgb)), transparent 70%);
+      bottom: 10%; left: 30%;
+      animation-delay: -8s;
+    }
 
-        .form-group input {
-            width: 100%;
-            padding: 0.9rem 1rem;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-md);
-            color: var(--text-main);
-            font-size: 0.95rem;
-            transition: var(--transition);
-        }
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%       { transform: translate(40px, -30px) scale(1.05); }
+      66%       { transform: translate(-20px, 40px) scale(0.95); }
+    }
 
-        .password-wrapper input {
-            padding-right: 3rem;
-        }
+    /* Grid noise overlay */
+    .landing-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(var(--lp-secondary-rgb), 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--lp-secondary-rgb), 0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    html[data-theme="dark"] .landing-bg::after {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    }
 
-        .toggle-password {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: var(--transition);
-            padding: 0.5rem;
-        }
+    /* ===== NAVBAR ===== */
+    .land-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 3rem;
+      background: var(--surface-navbar);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--glass-border);
+    }
 
-        .toggle-password:hover {
-            color: var(--primary);
-        }
+    .land-nav .logo { height: 2.4rem; filter: drop-shadow(0 0 12px rgba(var(--lp-primary-rgb), 0.5)); }
 
-        .form-group input:focus {
-            border-color: var(--primary);
-            background: rgba(0, 0, 0, 0.5);
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-        }
+    .land-nav-links { display: flex; gap: 2rem; align-items: center; }
+    .land-nav-links a {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .land-nav-links a:hover { color: var(--text-main); }
 
-        .form-group input::placeholder {
-            color: var(--text-dim);
-        }
+    .btn-try-nav {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white !important;
+      padding: 0.55rem 1.4rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: var(--transition);
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+    .btn-try-nav:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px var(--primary-glow);
+      color: white !important;
+    }
 
-        .auth-btn {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 4px 20px var(--primary-glow);
-            margin-top: var(--space-md);
-        }
+    .navbar-theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .navbar-theme-toggle:hover {
+      color: var(--text-main);
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      transform: translateY(-1px) rotate(15deg);
+    }
 
-        .auth-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px var(--primary-glow);
-        }
+    /* ===== HERO ===== */
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+    }
 
-        .auth-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(var(--lp-primary-rgb), 0.12);
+      border: 1px solid rgba(var(--lp-primary-rgb), 0.35);
+      color: var(--primary);
+      padding: 0.4rem 1.1rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+      animation: fadeInDown 0.6s var(--bounce) both;
+    }
 
-        .toggle-auth {
-            text-align: center;
-            margin-top: var(--space-xl);
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
+    .hero-badge i { font-size: 0.75rem; }
 
-        .toggle-auth a {
-            color: var(--primary);
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.7s var(--bounce) 0.1s both;
+    }
 
-        .toggle-auth a:hover {
-            color: var(--secondary);
-        }
+    .hero-title .line-gradient {
+      background: linear-gradient(135deg, var(--text-main) 0%, rgb(var(--lp-accent-rgb)) 35%, rgb(var(--lp-primary-rgb)) 65%, rgb(var(--lp-secondary-rgb)) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-        .message {
-            padding: 0.9rem;
-            border-radius: var(--radius-md);
-            margin-bottom: var(--space-lg);
-            font-size: 0.9rem;
-            display: none;
-        }
+    .hero-title .line-plain { color: var(--text-main); display: block; }
 
-        .message.error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #ef4444;
-        }
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--text-muted);
+      max-width: 560px;
+      line-height: 1.7;
+      margin-bottom: 3rem;
+      font-weight: 400;
+      animation: fadeInUp 0.7s var(--bounce) 0.2s both;
+    }
 
-        .message.success {
-            background: rgba(6, 182, 212, 0.1);
-            border: 1px solid rgba(6, 182, 212, 0.3);
-            color: var(--accent);
-        }
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.7s var(--bounce) 0.3s both;
+    }
 
-        .message.show {
-            display: block;
-            animation: slideIn 0.3s ease;
-        }
+    .btn-hero-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 1rem 2.2rem;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 6px 30px var(--primary-glow), 0 0 60px rgba(var(--lp-primary-rgb), 0.18);
+      transition: var(--transition);
+      border: 1px solid rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+    }
 
-        .username-group {
-            display: none;
-        }
+    .btn-hero-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s ease;
+    }
 
-        .username-group.show {
-            display: block;
-        }
-    </style>
+    .btn-hero-primary:hover::before { transform: translateX(100%); }
+
+    .btn-hero-primary:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 12px 40px var(--primary-glow), 0 0 80px rgba(var(--lp-primary-rgb), 0.25);
+      color: white;
+    }
+
+    .btn-hero-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--glass-surface);
+      color: var(--text-muted);
+      padding: 1rem 2rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      border: 1px solid var(--glass-border);
+      transition: var(--transition);
+      backdrop-filter: blur(12px);
+      text-decoration: none;
+    }
+
+    .btn-hero-secondary:hover {
+      background: var(--glass-surface-hover);
+      border-color: rgba(var(--lp-primary-rgb), 0.35);
+      color: var(--text-main);
+      transform: translateY(-2px);
+    }
+
+    /* ===== MILITARY IMAGE STRIP ===== */
+    .hero-image-wrap {
+      position: relative;
+      z-index: 1;
+      margin-top: 4rem;
+      padding: 0 2rem;
+      max-width: 900px;
+      width: 100%;
+      animation: fadeInUp 0.9s var(--bounce) 0.5s both;
+    }
+
+    .hero-dashboard-mock {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      box-shadow:
+        0 30px 60px rgba(var(--lp-secondary-rgb), 0.18),
+        0 0 0 1px rgba(var(--lp-secondary-rgb), 0.08),
+        0 0 60px rgba(var(--lp-primary-rgb), 0.12);
+    }
+    html[data-theme="dark"] .hero-dashboard-mock {
+      box-shadow:
+        0 40px 80px rgba(0,0,0,0.7),
+        0 0 0 1px rgba(255,255,255,0.05),
+        0 0 80px rgba(232,0,28,0.2);
+    }
+
+    .hero-dashboard-mock img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: brightness(0.7) contrast(1.1);
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    .mock-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        transparent 30%,
+        rgba(8, 2, 2, 0.65) 70%,
+        rgba(8, 2, 2, 0.96) 100%
+      );
+    }
+
+    .mock-overlay-top {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(var(--lp-primary-rgb), 0.1) 0%,
+        transparent 50%,
+        rgba(var(--lp-secondary-rgb), 0.07) 100%
+      );
+    }
+
+    .mock-stats {
+      position: absolute;
+      bottom: clamp(0.6rem, 4vw, 2rem);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: clamp(0.5rem, 2.5vw, 1.5rem);
+      background: rgba(8,2,2,0.88);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: clamp(0.5rem, 2vw, 1rem) clamp(0.75rem, 4vw, 2rem);
+      white-space: nowrap;
+      max-width: calc(100% - 1.5rem);
+    }
+
+    .mock-stat {
+      text-align: center;
+    }
+
+    .mock-stat-val {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(0.85rem, 3.2vw, 1.5rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .mock-stat-label { font-size: clamp(0.55rem, 2vw, 0.75rem); color: rgba(255,255,255,0.65); margin-top: 2px; }
+
+    .mock-sep { width: 1px; background: rgba(255,255,255,0.15); }
+
+    /* ===== FEATURES SECTION ===== */
+    .section {
+      position: relative;
+      z-index: 1;
+      padding: 6rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section-label {
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      text-align: center;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section-sub {
+      text-align: center;
+      color: var(--text-muted);
+      max-width: 500px;
+      margin: 0 auto 4rem;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--glass-surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--card-accent, var(--primary)), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-card:hover {
+      border-color: rgba(var(--lp-primary-rgb), 0.3);
+      background: var(--glass-surface-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(var(--lp-secondary-rgb), 0.14), 0 0 30px rgba(var(--lp-primary-rgb), 0.12);
+    }
+    html[data-theme="dark"] .feature-card:hover {
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(232,0,28,0.15);
+    }
+
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .feature-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      color: var(--text-main);
+    }
+
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .feature-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 1.25rem;
+      transition: var(--transition);
+    }
+
+    .feature-link:hover { gap: 0.7rem; }
+
+    /* ===== HOW IT WORKS ===== */
+    .steps-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      position: relative;
+    }
+
+    .steps-row::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--glass-border), var(--primary), var(--glass-border), transparent);
+    }
+
+    .step-item {
+      text-align: center;
+      padding: 1.5rem 1rem;
+    }
+
+    .step-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: white;
+      margin: 0 auto 1.25rem;
+      box-shadow: 0 0 30px var(--primary-glow);
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-item h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-item p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ===== QUOTE SECTION ===== */
+    .quote-section {
+      position: relative;
+      z-index: 1;
+      padding: 5rem 2rem;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .quote-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg,
+        rgba(var(--lp-primary-rgb), 0.07) 0%,
+        rgba(var(--lp-secondary-rgb), 0.07) 50%,
+        rgba(var(--lp-accent-rgb), 0.05) 100%);
+      border-top: 1px solid var(--glass-border);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .big-quote {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-weight: 800;
+      max-width: 800px;
+      margin: 0 auto 1rem;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      position: relative;
+    }
+
+    .big-quote .hl {
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ===== CTA SECTION ===== */
+    .cta-section {
+      position: relative;
+      z-index: 1;
+      padding: 6rem 2rem;
+      text-align: center;
+    }
+
+    .cta-box {
+      max-width: 700px;
+      margin: 0 auto;
+      background: var(--glass-surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 4rem 3rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--glass-shadow), 0 0 60px rgba(var(--lp-primary-rgb), 0.15);
+    }
+
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg,
+        rgba(var(--lp-primary-rgb), 0.1) 0%,
+        transparent 50%,
+        rgba(var(--lp-secondary-rgb), 0.06) 100%);
+    }
+
+    .cta-box-content { position: relative; z-index: 1; }
+
+    .cta-box h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .cta-box p {
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    /* ===== FOOTER ===== */
+    .land-footer {
+      position: relative;
+      z-index: 1;
+      padding: 2rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--glass-border);
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .land-footer .logo { height: 1.8rem; opacity: 0.7; }
+    .land-footer p { font-size: 0.82rem; color: var(--text-dim); }
+    .land-footer a { color: var(--primary); }
+    .land-footer a:hover { text-decoration: underline; color: #d65858; transition: var(--transition); }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s var(--bounce);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .land-nav { padding: 1rem 1.5rem; }
+      .land-nav-links .hide-mobile { display: none; }
+      .steps-row::before { display: none; }
+
+      .land-footer { flex-direction: column; text-align: center; padding: 2rem; }
+      .cta-box { padding: 2.5rem 1.5rem; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title { font-size: 2.5rem; }
+      .btn-hero-primary, .btn-hero-secondary { padding: 0.85rem 1.5rem; font-size: 0.9rem; }
+    }
+    /* ===== PROBLEM SECTION ===== */
+    .problem-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 3rem;
+    }
+    .problem-chip {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      padding: 0.6rem 1.3rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      backdrop-filter: blur(12px);
+    }
+    .problem-row i.arrow { color: var(--text-dim); font-size: 0.85rem; }
+    .problem-result {
+      text-align: center;
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      font-weight: 700;
+    }
+    .problem-result .hl {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    /* ===== LOOP SECTION ===== */
+    .loop-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .loop-step {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.5rem;
+      text-align: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      backdrop-filter: blur(12px);
+      min-width: 110px;
+    }
+    .loop-row i.arrow { color: var(--primary); font-size: 1.1rem; }
+
+    /* ===== VIDEO SECTION (lazy) ===== */
+    .video-frame {
+      max-width: 100%;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      cursor: pointer;
+      position: relative;
+    }
+    .video-frame video { width: 100%; height: auto; display: block; }
+    .video-play-badge {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(8,2,2,0.35);
+      pointer-events: none;
+    }
+    .video-play-badge i {
+      width: 68px; height: 68px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white; font-size: 1.4rem;
+      box-shadow: 0 8px 30px var(--primary-glow);
+    }
+    .video-frame.playing .video-play-badge { display: none; }
+
+    /* ===== GUEST / ACCOUNT SPLIT PANEL ===== */
+    .split-panel {
+      display: grid;
+      grid-template-columns: 55fr 45fr;
+      gap: 1.5rem;
+      align-items: stretch;
+    }
+    .split-card {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 2.5rem 2.25rem;
+      backdrop-filter: blur(20px);
+    }
+    .split-card .split-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+    }
+    .split-card h3 { font-family: 'Syne', sans-serif; font-size: clamp(1.3rem, 2.6vw, 1.7rem); margin-bottom: 1rem; }
+    .split-card p { color: var(--text-muted); line-height: 1.7; margin-bottom: 1.5rem; }
+    .split-guest { display: flex; flex-direction: column; justify-content: center; }
+    .split-guest .split-eyebrow { color: var(--text-muted); }
+    .split-account {
+      border-color: rgba(var(--lp-primary-rgb), 0.25);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .split-account .split-eyebrow { color: var(--primary); }
+    @media (max-width: 700px) {
+      .split-panel { grid-template-columns: 1fr; }
+    }
+
+  </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-logo">
-            <img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Etho Logo">
-            <h1 id="auth-title">Welcome Back</h1>
-            <p id="auth-subtitle">Sign in to continue your journey</p>
+
+  <!-- ===== ANIMATED BG ===== -->
+  <div class="landing-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="land-nav">
+    <a href="index.html">
+      <img src="./images/cropped_circle_image.png" alt="Etho" class="logo">
+    </a>
+    <div class="land-nav-links">
+      <a href="#features" class="hide-mobile">Features</a>
+      <a href="#how" class="hide-mobile">How it works</a>
+      <button type="button" class="navbar-theme-toggle" id="theme-toggle-btn" title="Switch theme">
+        <i class="fa-solid fa-sun"></i>
+      </button>
+      <a href="home.html" target="_blank" class="btn-try-nav">
+        <i class="fa-solid fa-arrow-right"></i> Try it Now
+      </a>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="hero-badge">
+      <i class="fa-solid fa-bolt"></i>
+      Personal Discipline OS
+    </div>
+
+    <h1 class="hero-title">
+      <span class="line-plain">Build the discipline to</span>
+      <span class="line-gradient">build the life you want.</span>
+    </h1>
+
+    <p class="hero-sub">
+      Etho turns your goals into daily actions, routines, plans and measurable
+      consistency — all in one simple system.
+    </p>
+
+    <div class="hero-cta">
+      <a href="login.html" class="btn-hero-primary">
+        <i class="fa-solid fa-rocket"></i>
+        Start building for free
+      </a>
+      <a href="#loop" class="btn-hero-secondary">
+        <i class="fa-solid fa-eye"></i>
+        See how it works
+      </a>
+    </div>
+
+    <!-- Image mockup with military image -->
+    <div class="hero-image-wrap">
+      <div class="hero-dashboard-mock">
+        <img src="./images/cropped_circle_image.png" alt="Etho Dashboard" />
+        <div class="mock-overlay"></div>
+        <div class="mock-overlay-top"></div>
+        <div class="mock-stats">
+          <div class="mock-stat">
+            <div class="mock-stat-val">12</div>
+            <div class="mock-stat-label">Active Goals</div>
+          </div>
+          <div class="mock-sep"></div>
+          <div class="mock-stat">
+            <div class="mock-stat-val">94%</div>
+            <div class="mock-stat-label">Completion Rate</div>
+          </div>
+          <div class="mock-sep"></div>
+          <div class="mock-stat">
+            <div class="mock-stat-val">21</div>
+            <div class="mock-stat-label">Day Streak 🔥</div>
+          </div>
+          <div class="mock-sep"></div>
+          <div class="mock-stat">
+            <div class="mock-stat-val">48</div>
+            <div class="mock-stat-label">Notes Saved</div>
+          </div>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <div id="message" class="message"></div>
+  <!-- ===== THE PROBLEM ===== -->
+  <section class="section" id="problem">
+    <div class="section-label reveal">The Problem</div>
+    <h2 class="section-title reveal">Your goals are scattered<br>across five different apps.</h2>
+    <div class="problem-row reveal">
+      <span class="problem-chip">Notes app</span>
+      <i class="fa-solid fa-arrow-right arrow"></i>
+      <span class="problem-chip">Task app</span>
+      <i class="fa-solid fa-arrow-right arrow"></i>
+      <span class="problem-chip">Calendar app</span>
+      <i class="fa-solid fa-arrow-right arrow"></i>
+      <span class="problem-chip">Fitness app</span>
+      <i class="fa-solid fa-arrow-right arrow"></i>
+      <span class="problem-chip">Habit app</span>
+    </div>
+    <p class="problem-result reveal">Etho brings the system <span class="hl">together</span>.</p>
+  </section>
 
-        <form id="auth-form">
-            <div class="form-group username-group" id="username-group">
-                <label for="username">
-                    <i class="fa-solid fa-user"></i> Username
-                </label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    placeholder="Choose a username"
-                    minlength="3"
-                    maxlength="20"
-                >
-            </div>
+  <!-- ===== THE LOOP ===== -->
+  <section class="section" id="loop">
+    <div class="section-label reveal">The System</div>
+    <h2 class="section-title reveal">One loop. Every goal runs through it.</h2>
+    <p class="section-sub reveal">This is the entire architecture of Etho — the loop every feature is built to strengthen.</p>
+    <div class="loop-row">
+      <div class="loop-step reveal">Goal</div>
+      <i class="fa-solid fa-arrow-right arrow reveal"></i>
+      <div class="loop-step reveal">Plan</div>
+      <i class="fa-solid fa-arrow-right arrow reveal"></i>
+      <div class="loop-step reveal">Execute</div>
+      <i class="fa-solid fa-arrow-right arrow reveal"></i>
+      <div class="loop-step reveal">Track</div>
+      <i class="fa-solid fa-arrow-right arrow reveal"></i>
+      <div class="loop-step reveal">Improve</div>
+    </div>
+  </section>
 
-            <div class="form-group">
-                <label for="email">
-                    <i class="fa-solid fa-envelope"></i> Email
-                </label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    placeholder="your.email@example.com"
-                    required
-                >
-            </div>
+  <!-- ===== DASHBOARD IN ACTION (lazy-loaded video) ===== -->
+  <section class="section" id="how">
+    <div class="section-label reveal">See It In Action</div>
+    <h2 class="section-title reveal">This is what execution<br>looks like.</h2>
+    <div class="video-frame reveal" id="demo-video-frame">
+      <video id="demo-video" preload="none" poster="./images/etho screenshot.png" controls>
+        <source src="./images/presentation video.mp4" type="video/mp4">
+      </video>
+      <div class="video-play-badge"><i class="fa-solid fa-play"></i></div>
+    </div>
+  </section>
 
-            <div class="form-group">
-                <label for="password">
-                    <i class="fa-solid fa-lock"></i> Password
-                </label>
-                <div class="password-wrapper">
-                    <input 
-                        type="password" 
-                        id="password" 
-                        placeholder="••••••••"
-                        minlength="6"
-                        required
-                    >
-                    <button type="button" class="toggle-password" id="toggle-password">
-                        <i class="fa-solid fa-eye"></i>
-                    </button>
-                </div>
-            </div>
+  <!-- ===== THREE PILLARS ===== -->
+  <section class="section" id="features">
+    <div class="section-label reveal">How It Works</div>
+    <h2 class="section-title reveal">Three pillars.<br>One system.</h2>
+    <p class="section-sub reveal">Every part of Etho exists to serve one of these.</p>
 
-            <button type="submit" class="auth-btn" id="submit-btn">
-                <i class="fa-solid fa-right-to-bracket"></i> Sign In
-            </button>
-        </form>
-
-        <div class="toggle-auth">
-            <span id="toggle-text">Don't have an account?</span>
-            <a id="toggle-link">Sign Up</a>
+    <div class="features-grid">
+      <div class="feature-card reveal" style="--card-accent: var(--primary);">
+        <div class="feature-icon" style="background: rgba(var(--lp-primary-rgb), 0.15); color: var(--primary);">
+          <i class="fa-solid fa-bullseye"></i>
         </div>
+        <h3>Plan</h3>
+        <p>Goals + Agenda. Decide what you're working toward and exactly when you'll execute it.</p>
+        <a href="goals.html" target="_blank" class="feature-link" style="color: var(--primary);">
+          Open Goals <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
 
-<button id="google-login" class="google-login">
-    Continue with Google 
-    <img src="../assets/images/Google__G__logo.svg.webp" alt="Google Logo">
-</button>    
-</div>
+      <div class="feature-card reveal" style="--card-accent: var(--secondary);">
+        <div class="feature-icon" style="background: rgba(var(--lp-secondary-rgb), 0.18); color: var(--secondary);">
+          <i class="fa-solid fa-list-check"></i>
+        </div>
+        <h3>Execute</h3>
+        <p>Checklist + Routines + Fitness. Turn the plan into daily actions you actually complete.</p>
+        <a href="checklist.html" target="_blank" class="feature-link" style="color: var(--secondary);">
+          Open Checklist <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
 
+      <div class="feature-card reveal" style="--card-accent: #22c55e;">
+        <div class="feature-icon" style="background: rgba(34,197,94,0.14); color: #22c55e;">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <h3>Improve</h3>
+        <p>Consistency + Progress. See whether you're really following your system, and adjust.</p>
+        <a href="consistency.html" target="_blank" class="feature-link" style="color: #22c55e;">
+          Open Consistency <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </section>
 
+  <!-- ===== TRY IT / SIGN IN ===== -->
+  <section class="section" id="account">
+    <div class="section-label reveal">Free, no catch</div>
+    <h2 class="section-title reveal">One system. Completely free.</h2>
+    <p class="section-sub reveal">Try Etho right now with no account. Sign in — still free — and everything unlocks.</p>
 
-    <script src="auth.js"></script>
-    <script>
-        // Toggle password visibility
-        const togglePasswordBtn = document.getElementById('toggle-password');
-        const passwordInput = document.getElementById('password');
-        
-        togglePasswordBtn.addEventListener('click', () => {
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-            
-            // Change icon
-            const icon = togglePasswordBtn.querySelector('i');
-            if (type === 'password') {
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            } else {
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            }
-        });
-    </script>
+    <div class="split-panel">
+      <div class="split-card split-guest reveal">
+        <div class="split-eyebrow">No account</div>
+        <h3>Enough to run the whole loop.</h3>
+        <p>Goals, checklist, agenda, and consistency tracking — the full Plan → Execute → Improve loop, right in your browser, no sign-up required.</p>
+        <a href="onboarding.html" target="_blank" class="feature-link" style="color: var(--text-muted);">
+          Try it now <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="split-card split-account reveal">
+        <div class="split-eyebrow">Signed in</div>
+        <h3>Removes the limits.</h3>
+        <p>The advanced consistency dashboard, Etho Agenda, Etho Fitness, smart reminders, and deeper customization — free, synced across your devices.</p>
+        <a href="upgrade.html" target="_blank" class="feature-link" style="color: var(--primary);">
+          See what's included <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta-section">
+    <div class="cta-box reveal">
+      <div class="cta-box-content">
+        <h2>Build the life you want.<br>Execute it every day.</h2>
+        <p>Etho turns your goals into daily actions, routines, planning and measurable consistency — all in one place.</p>
+        <a href="login.html" class="btn-hero-primary" style="display: inline-flex; margin: 0 auto;">
+          <i class="fa-solid fa-rocket"></i>
+          Start free
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="land-footer">
+    <img src="./images/etho_logo-removebg-preview.png" alt="Etho" class="logo">
+    <p>Copyright &copy; 2026. Made with ❤️ by <a href="https://www.youtube.com/channel/UCQCIuukPO_pf-xuCOfHNweg" target="_blank">@Gmindset02</a>.</p>
+    <div style="display: flex; gap: 1.5rem;">
+      <a href="home.html" target="_blank" style="color: var(--text-dim); font-size: 0.82rem; transition: var(--transition);">Dashboard</a>
+      <a href="goals.html" target="_blank" style="color: var(--text-dim); font-size: 0.82rem; transition: var(--transition);">Goals</a>
+      <a href="checklist.html" target="_blank" style="color: var(--text-dim); font-size: 0.82rem; transition: var(--transition);">Checklist</a>
+      <a href="consistency.html" target="_blank" style="color: var(--text-dim); font-size: 0.82rem; transition: var(--transition);">Consistency</a>
+    </div>
+  </footer>
+
+  <!-- ===== JS: Scroll Reveal ===== -->
+  <script>
+    // Theme toggle — mirrors the app's own toggle (auth.js) so the
+    // choice persists via the same "ethoTheme" localStorage key.
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    if (themeToggleBtn) {
+      const themeIcon = themeToggleBtn.querySelector('i');
+      const syncIcon = () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        themeIcon.className = `fa-solid ${isDark ? 'fa-moon' : 'fa-sun'}`;
+      };
+      syncIcon(); // correct the icon on load in case a stored preference was dark
+
+      themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const next = isDark ? 'light' : 'dark';
+        if (next === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+        try { localStorage.setItem('ethoTheme', JSON.stringify(next)); } catch (e) { /* ignore */ }
+        syncIcon();
+      });
+    }
+
+    // Lazy-loaded demo video — only fetches the file once the user clicks play
+    const demoFrame = document.getElementById('demo-video-frame');
+    const demoVideo = document.getElementById('demo-video');
+    if (demoFrame && demoVideo) {
+      demoFrame.addEventListener('click', () => {
+        demoFrame.classList.add('playing');
+        demoVideo.play();
+      }, { once: true });
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // Scroll reveal observer
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          // Stagger siblings inside the same parent
+          const siblings = entry.target.parentElement.querySelectorAll('.reveal');
+          let delay = 0;
+          siblings.forEach((el, idx) => {
+            if (el === entry.target) delay = idx * 80;
+          });
+          setTimeout(() => {
+            entry.target.classList.add('visible');
+          }, delay);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Parallax on hero orbs
+    window.addEventListener('mousemove', e => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 30;
+      const y = (e.clientY / window.innerHeight - 0.5) * 20;
+      document.querySelector('.orb-1').style.transform = `translate(${x * 0.5}px, ${y * 0.5}px)`;
+      document.querySelector('.orb-2').style.transform = `translate(${-x * 0.4}px, ${y * 0.4}px)`;
+      document.querySelector('.orb-3').style.transform = `translate(${x * 0.3}px, ${-y * 0.3}px)`;
+    });
+  </script>
+
 </body>
 </html>

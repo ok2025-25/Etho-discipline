@@ -1,256 +1,276 @@
-// ========== CONFIGURATION SUPABASE ==========
-const SUPABASE_URL = 'https://lvptwkknzvrocbvktdvg.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2cHR3a2tuenZyb2Nidmt0ZHZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4Nzc1NDQsImV4cCI6MjA3OTQ1MzU0NH0.TUOXAMw6USeZdYf_WSPyK_sdDSkKFvaeJqWqUu-nTFs';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// ========== PROFILE PAGE LOGIC ==========
 
-// ========== ÉLÉMENTS DOM ==========
-const profileForm = document.getElementById('profile-form');
-const usernameInput = document.getElementById('username');
-const emailInput = document.getElementById('email');
-const avatarImg = document.getElementById('profile-avatar');
-const avatarUpload = document.getElementById('avatar-upload');
-const logoutBtn = document.getElementById('logout-btn');
-const deleteAccountBtn = document.getElementById('delete-account-btn');
-const messageDiv = document.getElementById('message');
-const navbarUsername = document.getElementById('navbar-username');
-const sidebar = document.getElementById('sidebar');
-const sidebarToggle = document.getElementById('sidebar-toggle');
+document.addEventListener("DOMContentLoaded", async () => {
+  const user = await requireAuth();
+  if (!user) { window.location.href = LOGIN_PAGE; return; } // nothing to show a guest here
 
-let currentUser = null;
-let currentProfile = null;
-
-// ========== VÉRIFIER AUTHENTIFICATION ==========
-document.addEventListener('DOMContentLoaded', async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    currentUser = session.user;
-    await loadProfile();
+  renderAccountInfo(user);
+  renderTrackerStats();
+  renderChecklistStats();
+  renderGoalsStats();
+  renderLearningStats();
+  renderConsistencyStats();
+  setupHandlers(user);
 });
 
-// ========== CHARGER PROFIL ==========
-async function loadProfile() {
+// ---------- Account header + form ----------
+function renderAccountInfo(user) {
+  const name = user.user_metadata?.full_name || user.email.split("@")[0];
+  const avatarUrl = user.user_metadata?.avatar_url;
+  const avatarEl = document.getElementById("profile-avatar");
+
+  document.getElementById("profile-display-name").textContent = name;
+  document.getElementById("profile-email").textContent = user.email;
+  document.getElementById("profile-email-static").textContent = user.email;
+  document.getElementById("profile-name-input").value = user.user_metadata?.full_name || "";
+
+  if (avatarUrl) {
+    avatarEl.textContent = "";
+    avatarEl.style.backgroundImage = `url("${avatarUrl}")`;
+    avatarEl.style.backgroundSize = "cover";
+    avatarEl.style.backgroundPosition = "center";
+  } else {
+    avatarEl.style.backgroundImage = "";
+    avatarEl.textContent = name.charAt(0).toUpperCase();
+  }
+
+  const planLabel = document.getElementById("profile-plan-label");
+  if (planLabel && typeof isSignedIn === "function") {
     try {
-        // Charger les données du profil
-        const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single();
-        
-        if (error) throw error;
-        
-        currentProfile = profile;
-        
-        // Remplir le formulaire
-        usernameInput.value = profile.username || '';
-        emailInput.value = currentUser.email || '';
-        
-        // Mettre à jour l'avatar
-        if (profile.avatar_url) {
-            avatarImg.src = profile.avatar_url;
-        } else {
-            avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'User')}&size=120&background=8b5cf6&color=fff`;
-        }
-        
-        // Mettre à jour la navbar
-        updateNavbar(profile.username);
-        
-    } catch (error) {
-        console.error('Error loading profile:', error);
-        showMessage('Error loading profile', 'error');
+      Promise.resolve(isSignedIn(user)).then(signedIn => {
+        planLabel.textContent = signedIn ? "Signed in" : "Guest";
+      });
+    } catch (e) {
+      // isSignedIn() unavailable/failed — leave default "Guest" label
     }
+  }
 }
 
-// ========== METTRE À JOUR LA NAVBAR ==========
-function updateNavbar(username) {
-    if (navbarUsername) {
-        navbarUsername.innerHTML = `<i class="fa-regular fa-circle-user"></i> ${username || 'User'}`;
-    }
-}
+function setupHandlers(user) {
+  const saveBtn = document.getElementById("save-name-btn");
+  const nameInput = document.getElementById("profile-name-input");
+  const saveMsg = document.getElementById("save-msg");
+  const logoutBtn = document.getElementById("logout-btn");
 
-// ========== SAUVEGARDER PROFIL ==========
-profileForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const newUsername = usernameInput.value.trim();
-    
-    if (!newUsername) {
-        showMessage('Username cannot be empty', 'error');
-        return;
+  saveBtn.addEventListener("click", async () => {
+    const newName = nameInput.value.trim();
+    if (!newName) {
+      showSaveMsg("Please enter a name.", true);
+      return;
     }
-    
+
+    saveBtn.disabled = true;
     try {
-        // Mettre à jour le profil
-        const { error } = await supabase
-            .from('profiles')
-            .update({
-                username: newUsername,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', currentUser.id);
-        
-        if (error) throw error;
-        
-        // Mettre à jour les métadonnées de l'utilisateur
-        const { error: metaError } = await supabase.auth.updateUser({
-            data: { username: newUsername }
-        });
-        
-        if (metaError) throw metaError;
-        
-        currentProfile.username = newUsername;
-        updateNavbar(newUsername);
-        showMessage('Profile updated successfully!', 'success');
-        
-        // Mettre à jour l'avatar si pas d'URL personnalisée
-        if (!currentProfile.avatar_url) {
-            avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(newUsername)}&size=120&background=8b5cf6&color=fff`;
-        }
-        
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        showMessage('Error updating profile: ' + error.message, 'error');
+      const { user: updatedUser } = await updateUserFullName(newName);
+      document.getElementById("profile-display-name").textContent = newName;
+      if (!updatedUser.user_metadata?.avatar_url) {
+        document.getElementById("profile-avatar").textContent = newName.charAt(0).toUpperCase();
+      }
+      updateNavbarUser(updatedUser); // keep the navbar in sync without a reload
+      showSaveMsg("Saved!", false);
+    } catch (err) {
+      showSaveMsg(err.message || "Could not save.", true);
+    } finally {
+      saveBtn.disabled = false;
     }
-});
+  });
 
-// ========== UPLOAD AVATAR ==========
-avatarUpload.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // Vérifier le type de fichier
-    if (!file.type.startsWith('image/')) {
-        showMessage('Please select an image file', 'error');
-        return;
-    }
-    
-    // Vérifier la taille (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-        showMessage('Image must be less than 2MB', 'error');
-        return;
-    }
-    
-    try {
-        showMessage('Uploading avatar...', 'success');
-        
-        // Créer un nom de fichier unique
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
-        
-        // Upload vers Supabase Storage
-        const { error: uploadError } = await supabase.storage
-            .from('avatars')
-            .upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: true
-            });
-        
-        if (uploadError) throw uploadError;
-        
-        // Obtenir l'URL publique
-        const { data: urlData } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(filePath);
-        
-        const avatarUrl = urlData.publicUrl;
-        
-        // Mettre à jour la base de données
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ avatar_url: avatarUrl })
-            .eq('id', currentUser.id);
-        
-        if (updateError) throw updateError;
-        
-        // Mettre à jour l'affichage
-        avatarImg.src = avatarUrl;
-        currentProfile.avatar_url = avatarUrl;
-        
-        showMessage('Avatar updated successfully!', 'success');
-        
-    } catch (error) {
-        console.error('Error uploading avatar:', error);
-        showMessage('Error uploading avatar: ' + error.message, 'error');
-    }
-});
+  nameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") saveBtn.click();
+  });
 
-// ========== DÉCONNEXION ==========
-logoutBtn.addEventListener('click', async () => {
-    if (!confirm('Are you sure you want to logout?')) return;
-    
-    try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        
-        // Rediriger vers la page de connexion
-        window.location.href = 'index.html';
-        
-    } catch (error) {
-        console.error('Error logging out:', error);
-        showMessage('Error logging out: ' + error.message, 'error');
-    }
-});
+  logoutBtn.addEventListener("click", () => {
+    signOutUser();
+  });
 
-// ========== SUPPRIMER COMPTE ==========
-deleteAccountBtn.addEventListener('click', async () => {
-    const confirmation = prompt('Type "DELETE" to confirm account deletion:');
-    
-    if (confirmation !== 'DELETE') {
-        showMessage('Account deletion cancelled', 'error');
-        return;
-    }
-    
-    try {
-        // Supprimer le profil
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', currentUser.id);
-        
-        if (profileError) throw profileError;
-        
-        // Supprimer l'utilisateur (nécessite des permissions admin ou une function)
-        // Note: La suppression de l'utilisateur authentifié nécessite généralement une Edge Function
-        showMessage('Profile deleted. Logging out...', 'success');
-        
-        setTimeout(async () => {
-            await supabase.auth.signOut();
-            window.location.href = 'index.html';
-        }, 2000);
-        
-    } catch (error) {
-        console.error('Error deleting account:', error);
-        showMessage('Error deleting account: ' + error.message, 'error');
-    }
-});
+  const avatarInput = document.getElementById("avatar-input");
+  const avatarEl = document.getElementById("profile-avatar");
+  if (avatarInput) {
+    avatarInput.addEventListener("change", async () => {
+      const file = avatarInput.files[0];
+      if (!file) return;
 
-// ========== SIDEBAR TOGGLE ==========
-if (sidebarToggle) {
-    sidebarToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        sidebar.classList.toggle('open');
+      avatarEl.style.opacity = "0.5";
+      try {
+        const { user: updatedUser } = await uploadUserAvatar(file);
+        renderAccountInfo(updatedUser);
+        updateNavbarUser(updatedUser);
+        showSaveMsg("Profile picture updated!", false);
+      } catch (err) {
+        showSaveMsg(err.message || "Could not upload picture.", true);
+      } finally {
+        avatarEl.style.opacity = "1";
+        avatarInput.value = "";
+      }
     });
+  }
 }
 
-document.addEventListener('click', (e) => {
-    if (window.innerWidth < 1024 && sidebar.classList.contains('open') && 
-        !sidebar.contains(e.target) && e.target !== sidebarToggle) {
-        sidebar.classList.remove('open');
-    }
-});
+function showSaveMsg(text, isError) {
+  const el = document.getElementById("save-msg");
+  el.textContent = text;
+  el.className = "profile-save-msg show" + (isError ? " error" : "");
+  setTimeout(() => el.classList.remove("show"), 2500);
+}
 
-// ========== FONCTIONS UTILITAIRES ==========
-function showMessage(text, type) {
-    messageDiv.textContent = text;
-    messageDiv.className = `message ${type} show`;
-    
-    setTimeout(() => {
-        messageDiv.className = 'message';
-    }, 5000);
+// Writes a stat value to both the free-plan (legacy) element and the
+// Account tile element, since both versions render in the DOM at once
+// and are toggled purely via CSS ([data-plan]).
+function setStat(baseId, value) {
+  const legacyEl = document.getElementById(baseId);
+  if (legacyEl) legacyEl.textContent = value;
+  const accountEl = document.getElementById("account-" + baseId);
+  if (accountEl) accountEl.textContent = value;
+}
+
+// ---------- Momentum Tracker stats ----------
+async function renderTrackerStats() {
+  const state = await cloudGet("prod_momentum_data", { habits: [] });
+  const habits = state.habits || [];
+
+  const today = new Date().toISOString().split("T")[0];
+
+  // Today's completion
+  const doneToday = habits.filter(h => h.history && h.history[today]).length;
+  const todayPct = habits.length > 0 ? Math.round((doneToday / habits.length) * 100) : 0;
+
+  // Total check-ins
+  let totalChecks = 0;
+  habits.forEach(h => { totalChecks += Object.keys(h.history || {}).length; });
+
+  // Streak (same logic as tracker.js)
+  let streak = 0;
+  let d = new Date();
+  while (true) {
+    const dateStr = d.toISOString().split("T")[0];
+    const anyDone = habits.some(h => h.history && h.history[dateStr]);
+    if (dateStr === today) {
+      if (anyDone) streak++;
+    } else {
+      if (anyDone) streak++;
+      else break;
+    }
+    d.setDate(d.getDate() - 1);
+    // safety cap to avoid infinite loop on corrupted data
+    if (streak > 3650) break;
+  }
+
+  setStat("stat-streak", streak);
+  setStat("stat-today-pct", todayPct + "%");
+  setStat("stat-total-checkins", totalChecks);
+
+  const ring = document.getElementById("ring-today-pct");
+  if (ring) ring.style.setProperty("--pct", todayPct);
+}
+
+// ---------- Checklist stats ----------
+async function renderChecklistStats() {
+  const current = await cloudGet("dashboard_checklist_current", { tasks: [] });
+  const tasks = current.tasks || [];
+  const history = await cloudGet("dashboard_checklist_history", []);
+
+  const doneToday = tasks.filter(t => t.completed).length;
+  const todayPct = tasks.length > 0 ? Math.round((doneToday / tasks.length) * 100) : 0;
+
+  // Total tasks ever completed = today's completed + completed tasks saved in history
+  let historyCompleted = 0;
+  let listsCompleted = 0;
+  history.forEach(entry => {
+    const entryTasks = entry.tasks || [];
+    const completedInEntry = entryTasks.filter(t => t.completed).length;
+    historyCompleted += completedInEntry;
+    if (entryTasks.length > 0 && completedInEntry === entryTasks.length) listsCompleted++;
+  });
+
+  setStat("stat-checklist-today", todayPct + "%");
+  setStat("stat-checklist-done", doneToday + historyCompleted);
+  setStat("stat-checklist-lists", listsCompleted);
+
+  const ring = document.getElementById("ring-checklist-today");
+  if (ring) ring.style.setProperty("--pct", todayPct);
+}
+
+// ---------- Goals stats ----------
+async function renderGoalsStats() {
+  const goals = await cloudGet("productivity_goals_v2", []);
+  const total = goals.length;
+  const done = goals.filter(g => g.completed).length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  setStat("stat-goals-total", total);
+  setStat("stat-goals-done", done);
+  setStat("stat-goals-pct", pct + "%");
+
+  const ring = document.getElementById("ring-goals-pct");
+  if (ring) ring.style.setProperty("--pct", pct);
+}
+
+// ---------- Learning stats ----------
+async function renderLearningStats() {
+  const notes = await cloudGet("learningNotes", []);
+  setStat("stat-notes-count", notes.length);
+}
+
+// ---------- Consistency Tracker stats ----------
+async function renderConsistencyStats() {
+  const data = await cloudGet("consistency_tracker_data", {});
+
+  // Success rate for the current calendar year
+  const currentYear = new Date().getFullYear();
+  const yearData = data[currentYear] || {};
+  const values = Object.values(yearData);
+  const checks = values.filter(v => v === "check").length;
+  const crosses = values.filter(v => v === "cross").length;
+  const logged = checks + crosses;
+  const rate = logged > 0 ? Math.round((checks / logged) * 100) : 0;
+
+  // Current streak: walk backward day-by-day from today across all years
+  const pad = n => String(n).padStart(2, "0");
+  const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  let streak = 0;
+  const d = new Date();
+  while (true) {
+    const year = d.getFullYear();
+    const status = data[year] ? data[year][dateKey(d)] : undefined;
+    if (status === "check") {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    } else {
+      break;
+    }
+    if (streak > 3650) break; // safety cap
+  }
+
+  setStat("stat-consistency-streak", streak);
+  setStat("stat-consistency-rate", rate + "%");
+
+  const ring = document.getElementById("ring-consistency-rate");
+  if (ring) ring.style.setProperty("--pct", rate);
+}
+
+// ---------- Sidebar (mobile) ----------
+const burger = document.getElementById("sidebar-toggle");
+const sidebar = document.getElementById("sidebar");
+const sidebarOverlayEl = document.getElementById("overlay");
+
+if (burger && sidebar) {
+  burger.addEventListener("click", () => {
+    burger.classList.toggle("active");
+    sidebar.classList.toggle("open");
+    sidebarOverlayEl?.classList.toggle("active", sidebar.classList.contains("open"));
+  });
+
+  sidebarOverlayEl?.addEventListener("click", () => {
+    sidebar.classList.remove("open");
+    burger.classList.remove("active");
+    sidebarOverlayEl.classList.remove("active");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!sidebar.contains(e.target) && !burger.contains(e.target) && !e.target.closest(".mobile-bottom-nav")) {
+      sidebar.classList.remove("open");
+      burger.classList.remove("active");
+      sidebarOverlayEl?.classList.remove("active");
+    }
+  });
 }

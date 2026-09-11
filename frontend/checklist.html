@@ -1,38 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>document.documentElement.style.visibility = "hidden";</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Checklist | Etho Dashboard</title>
   <link rel="stylesheet" href="styles.css" />
-  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="./images/favicon.ico">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    /* ---- Reminders toggle + toast (scoped here, reuses shared design tokens) ---- */
+    .checklist-reminder-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-muted);
+      padding: 0.6rem 1rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.85rem;
+      cursor: pointer; transition: var(--transition-fast); font-family: inherit;
+    }
+    .checklist-reminder-btn:hover { border-color: var(--primary); color: var(--text-main); transform: translateY(-1px); }
+    .checklist-reminder-btn.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+
+    .checklist-reminder-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .reminder-volume-control {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-muted);
+      padding: 0.55rem 0.9rem; border-radius: var(--radius-md); transition: var(--transition-fast);
+    }
+    .reminder-volume-control:hover { border-color: var(--primary); }
+    .reminder-volume-control i { font-size: 0.85rem; width: 14px; text-align: center; }
+    .reminder-volume-control input[type="range"] {
+      -webkit-appearance: none; appearance: none; width: 84px; height: 4px; border-radius: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--glass-border)); outline: none; cursor: pointer;
+    }
+    .reminder-volume-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%;
+      background: var(--primary); border: 2px solid var(--text-main); box-shadow: 0 0 6px var(--primary-glow); cursor: pointer;
+    }
+    .reminder-volume-control input[type="range"]::-moz-range-thumb {
+      width: 14px; height: 14px; border-radius: 50%; background: var(--primary);
+      border: 2px solid var(--text-main); box-shadow: 0 0 6px var(--primary-glow); cursor: pointer;
+    }
+    .reminder-volume-control input[type="range"]::-moz-range-track { background: transparent; }
+
+    .etho-reminder-toast {
+      position: fixed; right: 20px; bottom: 20px; z-index: 2000; max-width: 340px;
+      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
+      box-shadow: var(--glass-shadow); padding: 1rem 1.1rem;
+      opacity: 0; transform: translateY(16px); transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .etho-reminder-toast.show { opacity: 1; transform: translateY(0); }
+    .etho-reminder-toast-icon {
+      width: 36px; height: 36px; border-radius: 50%; background: var(--primary-soft); color: var(--primary);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.95rem;
+    }
+    .etho-reminder-toast-body { flex: 1; min-width: 0; }
+    .etho-reminder-toast-title { font-weight: 700; color: var(--text-main); font-size: 0.9rem; }
+    .etho-reminder-toast-text { color: var(--text-muted); font-size: 0.82rem; margin-top: 2px; }
+    .etho-reminder-toast-close {
+      background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 2px; flex-shrink: 0;
+    }
+    .etho-reminder-toast-close:hover { color: var(--text-main); }
+    @media (max-width: 520px) { .etho-reminder-toast { left: 16px; right: 16px; max-width: none; } }
+
+    /* ---- Checklist Personalization (sign-in trial) — quiz + "Your Focus" card ----
+       Scoped here like the reminders block above. --persona-accent is set on
+       .checklist-main (JS, personalize.js) once a checklist has been
+       generated, so the card's icon/accents read the persona color. */
+    .focus-card {
+      position: relative;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      background: var(--glass-surface); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); box-shadow: var(--glass-shadow);
+      padding: 1.1rem 1.3rem; margin: 0 0 1.5rem;
+      transition: var(--transition-fast);
+    }
+    .focus-card:hover { background: var(--glass-surface-hover); }
+    .focus-card-icon {
+      width: 46px; height: 46px; flex-shrink: 0; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+      background: color-mix(in srgb, var(--persona-accent, var(--primary)) 15%, transparent);
+      color: var(--persona-accent, var(--primary));
+    }
+    .focus-card-body { flex: 1; min-width: 200px; }
+    .focus-card-body h3 { font-size: 1rem; color: var(--text-main); margin-bottom: 0.25rem; }
+    .focus-card-body p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; }
+    .focus-card-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--primary); color: #fff; border: none;
+      padding: 0.65rem 1.1rem; border-radius: var(--radius-md);
+      font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+      transition: var(--transition-fast); font-family: inherit;
+    }
+    .focus-card-cta:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .focus-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .focus-card-icon-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--glass-highlight); border: 1px solid var(--glass-border);
+      color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: var(--transition-fast); font-family: inherit;
+    }
+    .focus-card-icon-btn:hover { color: var(--text-main); border-color: var(--persona-accent, var(--primary)); }
+    .focus-card-icon-btn.focus-card-shuffle:hover { transform: scale(1.08); }
+    .focus-card-icon-btn.focus-card-retake:hover { transform: rotate(90deg); }
+
+    .focus-quiz-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--space-md);
+      background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px);
+      opacity: 0; transition: opacity 0.2s ease;
+    }
+    .focus-quiz-overlay.open { opacity: 1; }
+    .focus-quiz-box {
+      width: 100%; max-width: 460px;
+      background: var(--surface-popup); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg); box-shadow: var(--glass-shadow);
+      padding: var(--space-lg);
+      transform: translateY(16px) scale(0.98);
+      transition: transform 0.25s var(--bounce);
+    }
+    .focus-quiz-overlay.open .focus-quiz-box { transform: translateY(0) scale(1); }
+    .focus-quiz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: var(--space-md); }
+    .focus-quiz-header h3 { font-size: 1.05rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+    .focus-quiz-header h3 i { color: var(--primary); }
+    .focus-quiz-close {
+      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--glass-border);
+      background: var(--glass-highlight); color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: var(--transition-fast); flex-shrink: 0;
+    }
+    .focus-quiz-close:hover { color: var(--text-main); background: var(--lift-4); transform: rotate(90deg); }
+    .focus-quiz-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 1.25rem; }
+    .focus-quiz-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--glass-border); transition: var(--transition-fast); }
+    .focus-quiz-dot.active { background: var(--primary); width: 20px; border-radius: 4px; }
+    .focus-quiz-dot.done { background: var(--primary-soft); }
+    .focus-quiz-question { font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 1rem; text-align: center; }
+    .focus-quiz-options { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
+    .focus-quiz-option {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--glass-highlight); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); padding: 0.75rem 1rem;
+      color: var(--text-main); font-size: 0.9rem; font-family: inherit; text-align: left;
+      cursor: pointer; transition: var(--transition-fast); width: 100%;
+    }
+    .focus-quiz-option i { width: 18px; text-align: center; color: var(--primary); flex-shrink: 0; }
+    .focus-quiz-option:hover { border-color: var(--primary); background: var(--primary-soft); transform: translateX(3px); }
+    .focus-quiz-back {
+      display: flex; align-items: center; gap: 6px; background: none; border: none;
+      color: var(--text-muted); font-size: 0.82rem; cursor: pointer; font-family: inherit;
+      padding: 0.3rem 0.2rem; margin: 0 auto;
+    }
+    .focus-quiz-back:hover { color: var(--text-main); }
+
+    .focus-quiz-summary { text-align: center; }
+    .focus-quiz-summary-icon {
+      width: 56px; height: 56px; margin: 0 auto 0.9rem;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      background: color-mix(in srgb, var(--summary-accent, var(--primary)) 15%, transparent);
+      color: var(--summary-accent, var(--primary));
+    }
+    .focus-quiz-summary h4 { font-size: 1.02rem; color: var(--text-main); margin-bottom: 0.4rem; }
+    .focus-quiz-summary p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.3rem; }
+    .focus-quiz-summary-note {
+      font-size: 0.75rem; color: var(--text-dim); margin: 0.9rem 0 1.2rem;
+      background: var(--glass-highlight); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); padding: 0.6rem 0.8rem;
+    }
+    .focus-quiz-summary-actions { display: flex; flex-direction: column; gap: 0.6rem; }
+    .focus-quiz-generate-btn {
+      background: var(--primary); color: #fff; border: none;
+      padding: 0.8rem 1.1rem; border-radius: var(--radius-md);
+      font-weight: 700; font-size: 0.9rem; cursor: pointer; font-family: inherit;
+      transition: var(--transition-fast);
+    }
+    .focus-quiz-generate-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .focus-quiz-cancel-btn {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 0.82rem; cursor: pointer; font-family: inherit; padding: 0.3rem;
+    }
+    .focus-quiz-cancel-btn:hover { color: var(--text-main); }
+
+    /* "What's in your checklist" configure panel (personalize.js openConfigurePanel) */
+    .focus-config-options { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.1rem; }
+    .focus-config-option {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--glass-highlight); border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md); padding: 0.7rem 0.9rem;
+      color: var(--text-main); font-size: 0.88rem; cursor: pointer; transition: var(--transition-fast);
+    }
+    .focus-config-option:hover { border-color: var(--primary); }
+    .focus-config-option i { width: 16px; text-align: center; color: var(--primary); flex-shrink: 0; }
+    .focus-config-option input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+    .focus-quiz-save {
+      width: 100%; background: var(--primary); color: #fff; border: none;
+      padding: 0.8rem 1.1rem; border-radius: var(--radius-md);
+      font-weight: 700; font-size: 0.9rem; cursor: pointer; font-family: inherit;
+      transition: var(--transition-fast);
+    }
+    .focus-quiz-save:hover { transform: translateY(-1px); filter: brightness(1.08); }
+
+    @media (max-width: 520px) {
+      .focus-card { flex-direction: column; align-items: flex-start; }
+      .focus-card-cta { width: 100%; justify-content: center; }
+    }
+  </style>
 </head>
 <body>
 
   <nav class="navbar">
     <div class="navbar-left">
       <a href="home.html">
-        <img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Etho Logo" class="logo">
+        <img src="./images/etho_logo-removebg-preview.png" alt="Logo" class="logo">
       </a>
     </div>
     <div class="navbar-right">
+      <span class="account-pill" id="account-pill" title="Signed in"><i class="fa-solid fa-crown"></i></span>
       <span class="username">
         <i class="fa-regular fa-circle-user"></i> User
       </span>
     </div>
   </nav>
-
+  <div class="sidebar-overlay" id="overlay"></div>
   <aside class="sidebar" id="sidebar">
     <h2>Menu</h2>
     <nav>
       <ul>
         <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
         <li><a href="checklist.html" class="active"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="tracker.html"><i class="fa-solid fa-fire"></i> Tracker</a></li>
+        <li><a href="agenda.html"><i class="fa-solid fa-calendar-days"></i> Agenda</a></li>
         <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
-        <li><a href="tracker.html"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
-        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
-        <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+        <li><a href="consistency.html"><i class="fa-solid fa-calendar-check"></i> Consistency</a></li>
+        <li><a href="fitness.html"><i class="fa-solid fa-dumbbell"></i> Fitness</a></li>
+        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Library</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+        <li><a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
       </ul>
     </nav>
   </aside>
@@ -44,8 +246,17 @@
   <main class="checklist-main">
     <header class="header">
       <h1>Daily Focus</h1>
-      <p>Design your day, track your wins.</p>
+      <p id="checklist-subtitle">Design your day, track your wins.</p>
     </header>
+
+    <div class="checklist-tabs" id="checklist-tabs" role="tablist">
+      <button class="checklist-tab-btn active" data-tab="routine" role="tab" aria-selected="true">
+        <i class="fa-solid fa-rotate"></i> Routine
+      </button>
+      <button class="checklist-tab-btn" data-tab="checklist" role="tab" aria-selected="false">
+        <i class="fa-solid fa-list-check"></i> Checklist
+      </button>
+    </div>
 
     <div class="checklist-progress-container">
       <div class="checklist-progress-label">
@@ -57,14 +268,32 @@
       </div>
     </div>
 
+    <div class="focus-card" id="focus-card" data-account-feature data-account-label="Checklist Personalization" data-account-copy="A quick quiz builds a checklist that actually fits how you work — your focus time, motivation style and vibe."></div>
+
     <section class="checklist-flex">
       
       <div class="checklist-tasks-col" id="checklist-tasks-col">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-          <h2 style="font-size:1.2rem; color:var(--text-main);">Today's Tasks</h2>
-          <button class="checklist-add-btn" id="add-task-btn">
-            <i class="fa-solid fa-plus"></i> Add Task
+        <div class="checklist-header-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:10px;">
+          <button type="button" class="checklist-category-toggle-btn" id="mobile-category-toggle-btn" aria-expanded="false" aria-controls="categories-section">
+            <i class="fa-solid fa-tag"></i>
+            <span id="mobile-category-active-label">All</span>
+            <i class="fa-solid fa-chevron-down cct-chevron"></i>
           </button>
+          <h2 style="font-size:1.2rem; color:var(--text-main);" id="tasks-col-title">Today's Routine</h2>
+          <div class="checklist-header-actions" style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="checklist-reminder-controls" data-account-feature data-account-label="Smart Reminders" data-account-copy="Task-time alarms with adjustable volume that keep ringing until you actually show up.">
+              <button class="checklist-reminder-btn" id="reminders-toggle-btn">
+                <i class="fa-solid fa-bell-slash"></i> Reminders off
+              </button>
+              <div class="reminder-volume-control" title="Reminder volume">
+                <i class="fa-solid fa-volume-low"></i>
+                <input type="range" id="reminders-volume-slider" min="0" max="1" step="0.05" aria-label="Reminder volume">
+              </div>
+            </div>
+            <button class="checklist-add-btn" id="add-task-btn">
+              <i class="fa-solid fa-plus"></i> Add Task
+            </button>
+          </div>
         </div>
 
         <ul class="checklist-tasks-list" id="tasks-list">
@@ -74,7 +303,7 @@
           <button class="checklist-history-btn" id="history-btn">
             <i class="fa-solid fa-clock-rotate-left"></i> History & Previous Lists
           </button>
-          <div class="checklist-history-dropdown" id="history-dropdown" hidden style="background:var(--bg-body); padding:1rem; border-radius:12px; margin-top:10px; list-style-type: none;">
+          <div class="checklist-history-dropdown" id="history-dropdown" hidden>
             <ul id="history-list"></ul>
           </div>
         </div>
@@ -84,15 +313,26 @@
         <h2 style="font-size:1.1rem; color:var(--text-muted); margin-bottom:1rem; text-transform:uppercase; letter-spacing:1px;">Templates</h2>
         
         <div class="templates-options">
-          <button class="template-btn" data-template="Cr7 routine">
-            <i class="fa-solid fa-person-running"></i> CR7 Routine
+          <button class="template-btn" id="checklist-open-systems-btn" style="color:var(--primary); border-color:var(--primary);">
+            <i class="fa-solid fa-layer-group"></i> Activate a System
           </button>
-          <button class="template-btn" data-template="Jeff Bezos routine">
+          <div style="height:1px; background:var(--glass-border); margin:10px 0;"></div>
+          <button class="template-btn" data-template="cr7">
+            <i class="fa-solid fa-futbol"></i> CR7 Routine
+          </button>
+          <button class="template-btn" data-template="bezos">
             <i class="fa-solid fa-rocket"></i> Jeff Bezos Routine
           </button>
-          <button class="template-btn" data-template="Mark Zuckerberg routine">
-            <i class="fa-brands fa-meta"></i> Zuckerberg Routine
+          <button class="template-btn" data-template="gmindset">
+            <i class="fa-brands fa-youtube"></i> Gmindset02 Perfect Day
           </button>
+
+          <button class="template-browse-btn" id="browse-templates-btn" data-account-feature data-account-label="All Templates" data-account-copy="Browse every routine template, not just the three free starter picks.">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>Browse All Templates</span>
+            <i class="fa-solid fa-arrow-right template-browse-arrow"></i>
+          </button>
+
           <div style="height:1px; background:var(--glass-border); margin:10px 0;"></div>
           <button class="template-btn" data-template="custom" style="color:var(--accent);">
             <i class="fa-solid fa-pen-fancy"></i> Create Custom
@@ -110,15 +350,70 @@
       </div>
     </section>
 
-    <section class="quote" style="text-align:center; margin-top:3rem; opacity:0.6; font-style:italic;">
-      “Success is the sum of small efforts, repeated day in and day out.”
-    </section>
+<section class="quote-rotator" id="quote-rotator" aria-live="polite">
+  <blockquote id="quote-text"></blockquote>
+  <cite id="quote-author"></cite>
+</section>
   </main>
 
-  <footer class="footer">
-    <p>&copy; 2025 Etho Dashboard. Crafted with Focus.</p>
-  </footer>
 
+    <footer class="footer">
+        <p>Copyright &copy; 2026. Made with ❤️ by <a href="https://www.youtube.com/channel/UCQCIuukPO_pf-xuCOfHNweg" target="_blank">@Gmindset02</a>.</p>
+    </footer>
+
+  <div class="template-library-overlay" id="template-library-modal" hidden>
+    <div class="template-library-box">
+      <div class="template-library-header">
+        <div>
+          <h3><i class="fa-solid fa-layer-group"></i> Template Library</h3>
+          <p class="template-library-sub">Daily routines compiled from public interviews and reporting — not affiliated with or endorsed by anyone listed.</p>
+        </div>
+        <button class="template-library-close" id="template-library-close" aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="template-library-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="template-library-search-input" placeholder="Search by name or person...">
+      </div>
+      <div class="template-library-grid" id="template-library-grid"></div>
+    </div>
+  </div>
+
+  <div id="focus-quiz-modal-root" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="auth.js"></script>
+  <script src="account-base.js"></script>
+  <script src="dialogs.js"></script>
   <script src="checklist.js"></script>
+  <script src="cloud-sync.js"></script>
+  <script src="consistency-prompt.js"></script>
+  <script src="reminders.js"></script>
+  <script src="personalize-engine.js"></script>
+  <script src="personalize.js"></script>
+  <script src="systems-data.js"></script>
+  <script src="systems.js"></script>
+  <script>
+    document.getElementById("checklist-open-systems-btn")?.addEventListener("click", () => openSystemsModal());
+  </script>
+
+  <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <a href="home.html" class="mbn-item"><i class="fa-solid fa-house"></i>Home</a>
+    <a href="checklist.html" class="mbn-item active"><i class="fa-solid fa-list-check"></i>Today</a>
+    <a href="goals.html" class="mbn-item"><i class="fa-solid fa-bullseye"></i>Goals</a>
+    <a href="consistency.html" class="mbn-item"><i class="fa-solid fa-chart-line"></i>Progress</a>
+    <button type="button" class="mbn-item" id="mbn-more" aria-label="More"><i class="fa-solid fa-bars"></i>More</button>
+  </nav>
+  <script>
+    document.getElementById('mbn-more')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('overlay')?.classList.toggle('active');
+    });
+  </script>
+
 </body>
 </html>

@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>document.documentElement.style.visibility = "hidden";</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Momentum Tracker</title>
   <link rel="stylesheet" href="styles.css">
-  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
-  
+  <link rel="icon" href="./images/favicon.ico">  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
   <style>
     /* Dashboard Stats Grid */
     .stats-grid {
@@ -40,11 +39,11 @@
       display: flex;
       gap: var(--space-sm);
       margin-bottom: var(--space-md);
-      background: rgba(0,0,0,0.2);
+      background: var(--recess-1);
       padding: var(--space-sm);
       border-radius: var(--radius-md);
     }
-    .add-habit-form input { flex: 1; border: none; background: transparent; color: white; }
+    .add-habit-form input { flex: 1; border: none; background: transparent; color: var(--text-main); }
     .add-habit-form input:focus { box-shadow: none; outline: none; }
 
     /* Habit History Dots (Mini Heatmap) */
@@ -58,11 +57,47 @@
       width: 8px;
       height: 8px;
       border-radius: 2px;
-      background: rgba(255,255,255,0.1);
+      background: var(--lift-4);
       transition: var(--transition);
     }
     .history-dot.done { background: var(--accent); box-shadow: 0 0 5px var(--accent-glow); }
     .history-dot.today { border: 1px solid var(--text-muted); }
+    .history-dot.not-scheduled { background: transparent; border: 1px dashed var(--glass-border); }
+
+    /* Paused / off-today status badges next to a habit's name */
+    .habit-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 1px 7px;
+      border-radius: 99px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .habit-status-paused {
+      background: rgba(212, 175, 55, 0.16);
+      color: var(--gold-text, var(--gold));
+      border: 1px solid rgba(212, 175, 55, 0.35);
+    }
+    .habit-status-off {
+      background: var(--glass-highlight);
+      color: var(--text-dim);
+      border: 1px solid var(--glass-border);
+      text-transform: none;
+      font-weight: 600;
+      letter-spacing: normal;
+    }
+    #habits-list .checklist-task-item.habit-paused-row { opacity: 0.72; }
+
+    /* Not-scheduled heatmap cells (mini + big habit modal heatmap) */
+    .heatmap-cell.not-scheduled {
+      background: transparent;
+      background-image: repeating-linear-gradient(135deg, var(--glass-border) 0, var(--glass-border) 1px, transparent 1px, transparent 4px);
+    }
 
     /* Empty State */
     .empty-state {
@@ -71,16 +106,602 @@
         color: var(--text-muted);
         font-style: italic;
     }
+
+    /* Habit Template Chips */
+    .habit-templates {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+    .template-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--glass-highlight);
+      color: var(--text-muted);
+      border: 1px solid var(--glass-border);
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .template-chip:hover {
+      background: var(--lift-4);
+      color: var(--text-main);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .template-chip i { font-size: 0.75rem; }
+    .template-chip.added {
+      color: var(--accent, #8b5cf6);
+      border-color: var(--accent, #8b5cf6);
+      cursor: default;
+      opacity: 0.7;
+    }
+    .template-chip.added:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Account stats — visual icon/ring tiles, swapped in for stats-grid via
+       [data-plan="account"]. Reuses .dash-card / .dash-icon / .dash-stat-value /
+       .dash-meta / data-account-feature from styles.css so it automatically
+       inherits the site-wide gold account treatment. */
+    .stats-grid-account {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+    }
+    [data-plan="account"] .stats-grid { display: none; }
+    [data-plan="account"] .stats-grid-account { display: grid; }
+
+    .stat-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.65rem;
+      cursor: pointer;
+    }
+    .stat-tile .dash-icon {
+      width: 4rem;
+      height: 4rem;
+      font-size: 1.6rem;
+      border-radius: 50%;
+    }
+    .stat-tile .dash-icon.flame { animation: flamePulse 2.4s ease-in-out infinite; }
+    @keyframes flamePulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(212, 175, 55, 0); }
+      50% { box-shadow: 0 0 18px var(--gold-glow); }
+    }
+    .stat-tile .dash-stat-value { font-size: clamp(2.1rem, 4.5vw, 2.7rem); }
+    .stat-tile .dash-meta {
+      margin-top: 0;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stat-ring {
+      position: relative;
+      width: 106px;
+      height: 106px;
+      border-radius: 50%;
+      background: conic-gradient(var(--gold) calc(var(--pct, 0) * 1%), var(--lift-2) 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.7s ease;
+    }
+    .stat-ring::before {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      border-radius: 50%;
+      background: var(--glass-surface);
+    }
+    .stat-ring span {
+      position: relative;
+      z-index: 1;
+      font-size: 1.45rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* ====== Habit Insights (account) — heatmap + per-habit analytics ====== */
+    .habit-insights-card { margin-top: var(--space-xl); }
+    .insights-sub { font-size: 0.82rem; color: var(--text-muted); margin: -0.4rem 0 1.1rem; line-height: 1.5; max-width: 520px; }
+
+    .insights-heatmap-wrap { overflow-x: auto; padding-bottom: 0.4rem; }
+
+    .insights-heatmap-months {
+      display: flex;
+      gap: 3px;
+      margin-bottom: 4px;
+      padding-left: 1px;
+    }
+    .insights-heatmap-months span {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      min-width: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .heatmap-grid {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(7, 17px);
+      gap: 4px;
+      width: max-content;
+    }
+    .heatmap-cell {
+      width: 17px;
+      height: 17px;
+      border-radius: 4px;
+      background: var(--lift-2);
+      transition: var(--transition-fast);
+    }
+    .heatmap-cell.pad { background: transparent; }
+    .heatmap-cell[data-level="1"] { background: var(--gold-soft); }
+    .heatmap-cell[data-level="2"] { background: rgba(212, 175, 55, 0.45); }
+    .heatmap-cell[data-level="3"] { background: rgba(212, 175, 55, 0.72); }
+    .heatmap-cell[data-level="4"] { background: var(--gold); box-shadow: 0 0 6px var(--gold-glow); }
+    .heatmap-cell.today { outline: 2px solid var(--text-main); outline-offset: 1px; }
+    .heatmap-cell:hover:not(.pad) { transform: scale(1.35); position: relative; z-index: 2; }
+
+    .insights-heatmap-months span { min-width: 17px; font-size: 0.66rem; }
+
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 0.9rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .heatmap-legend .heatmap-cell { width: 13px; height: 13px; cursor: default; }
+    .heatmap-legend .heatmap-cell:hover { transform: none; }
+
+    .habit-insight-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .habit-insight-row {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.2rem 1.4rem;
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      flex-wrap: wrap;
+      cursor: pointer;
+      transition: var(--transition);
+      animation: habitRowIn 0.4s var(--bounce) both;
+    }
+    .habit-insight-row:hover, .habit-insight-row:focus-visible {
+      background: var(--glass-surface-hover);
+      border-color: var(--gold-glow);
+      box-shadow: 0 0 24px var(--gold-glow);
+      transform: translateY(-3px);
+      outline: none;
+    }
+    .habit-insight-row:nth-child(1) { animation-delay: 0.02s; }
+    .habit-insight-row:nth-child(2) { animation-delay: 0.07s; }
+    .habit-insight-row:nth-child(3) { animation-delay: 0.12s; }
+    .habit-insight-row:nth-child(4) { animation-delay: 0.17s; }
+    .habit-insight-row:nth-child(n+5) { animation-delay: 0.22s; }
+    @keyframes habitRowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .habit-insight-info { min-width: 170px; flex: 1; }
+    .habit-insight-name { font-weight: 700; color: var(--text-main); font-size: 1.05rem; margin-bottom: 6px; }
+    .habit-insight-sub { font-size: 0.82rem; color: var(--text-muted); display: flex; gap: 14px; flex-wrap: wrap; }
+    .habit-insight-sub span { display: inline-flex; align-items: center; gap: 5px; }
+    .habit-insight-sub i { color: var(--gold); font-size: 0.76rem; }
+
+    .habit-mini-heatmap {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(7, 10px);
+      gap: 3px;
+    }
+    .habit-mini-heatmap .heatmap-cell { width: 10px; height: 10px; border-radius: 2px; }
+    .habit-mini-heatmap .heatmap-cell:hover { transform: none; }
+
+    .habit-details-btn {
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      color: var(--gold-text);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      flex-shrink: 0;
+      pointer-events: none; /* the whole row handles the click now */
+    }
+    .habit-insight-row:hover .habit-details-btn { background: var(--gold-soft); border-color: var(--gold-glow); transform: scale(1.1); }
+
+    .habit-insights-card.jump-highlight {
+      animation: insightsJumpPulse 1s ease;
+    }
+    @keyframes insightsJumpPulse {
+      0% { box-shadow: 0 0 0 rgba(212, 175, 55, 0); }
+      30% { box-shadow: 0 0 40px var(--gold-glow), 0 0 0 3px var(--gold-glow); }
+      100% { box-shadow: 0 0 0 rgba(212, 175, 55, 0); }
+    }
+
+    /* Mobile-only collapse toggle for the Habit Insights section — hidden
+       on desktop, where the section is small enough to always show in
+       full. On phones it starts collapsed (too much scroll otherwise)
+       and expands on tap. */
+    .habit-insights-toggle {
+      display: none;
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .habit-insights-toggle:hover { border-color: var(--gold-glow); color: var(--gold-text); }
+    .habit-insights-toggle .hi-chevron { transition: transform 0.2s ease; }
+    .habit-insights-card.collapsed .habit-insights-toggle .hi-chevron { transform: rotate(-90deg); }
+
+    .habit-insights-body {
+      overflow: hidden;
+      max-height: 4000px;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
+    }
+
+
+    /* Entrance animation for the daily habit list, and a little pop on the stat numbers */
+    #habits-list .checklist-task-item { animation: taskFadeIn 0.35s ease both; }
+    @keyframes taskFadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+
+    .count-pop { animation: countPop 0.4s var(--bounce); }
+    @keyframes countPop { 0% { transform: scale(0.85); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+
+    /* Habit detail modal (mirrors the site's template-library modal pattern) */
+    .habit-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .habit-modal-overlay:not([hidden]) { display: flex; }
+    .habit-modal-overlay.open { opacity: 1; }
+
+    .habit-modal-box {
+      width: 100%;
+      max-width: 600px;
+      max-height: min(85vh, 760px);
+      overflow-y: auto;
+      background: var(--surface-popup);
+      border: 1px solid var(--gold-glow);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--glass-shadow), 0 0 30px var(--gold-glow);
+      padding: var(--space-xl);
+      transform: translateY(16px) scale(0.98);
+      transition: transform 0.25s var(--bounce);
+    }
+    .habit-modal-overlay.open .habit-modal-box { transform: translateY(0) scale(1); }
+
+    .habit-modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-xl); gap: var(--space-md); }
+    .habit-modal-header h3 {
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--gold-text), var(--gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .habit-modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; flex-shrink: 0; }
+    .habit-modal-close:hover { color: var(--text-main); }
+
+    /* Edit Habit modal — same overlay mechanics as the (account) insights
+       modal above, but plain surface styling since this is a free-tier
+       feature, not gold-accented account content. */
+    .habit-edit-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .habit-edit-overlay:not([hidden]) { display: flex; }
+    .habit-edit-overlay.open { opacity: 1; }
+    .habit-edit-box {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface-popup);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--glass-shadow);
+      padding: var(--space-xl);
+      transform: translateY(16px) scale(0.98);
+      transition: transform 0.25s var(--bounce);
+    }
+    .habit-edit-overlay.open .habit-edit-box { transform: translateY(0) scale(1); }
+    .habit-edit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-lg); gap: var(--space-md); }
+    .habit-edit-header h3 { font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
+    .habit-edit-close { background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; }
+    .habit-edit-close:hover { color: var(--text-main); }
+    .habit-edit-group { margin-bottom: var(--space-lg); }
+    .habit-edit-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+    .habit-edit-group input[type="text"] {
+      width: 100%;
+      background: var(--recess-1);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 0.7rem 1rem;
+      color: var(--text-main);
+      font-size: 0.95rem;
+    }
+    .habit-edit-freq-pills { display: flex; gap: 0.5rem; }
+    .habit-edit-freq-pill {
+      flex: 1;
+      text-align: center;
+      padding: 0.55rem 0.7rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+      background: var(--glass-highlight);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .habit-edit-freq-pill.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-color: transparent;
+      color: #fff;
+    }
+    .habit-edit-days {
+      display: none;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 0.75rem;
+    }
+    .habit-edit-days.shown { display: flex; }
+    .habit-edit-day-btn {
+      width: 42px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--glass-border);
+      background: var(--glass-highlight);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .habit-edit-day-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-color: transparent;
+      color: #fff;
+    }
+    .habit-edit-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: var(--space-md); }
+    .habit-edit-cancel {
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      padding: 0.65rem 1.2rem;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .habit-edit-cancel:hover { color: var(--text-main); background: var(--lift-3); }
+
+    /* Weekly Performance chart — clickable to open the full breakdown */
+    .weekly-perf-chart-wrap {
+      position: relative;
+      height: 250px;
+      width: 100%;
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: var(--transition-fast);
+    }
+    .weekly-perf-chart-wrap:hover { background: var(--glass-highlight); }
+    .weekly-perf-expand-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      margin-top: 0.6rem;
+      padding: 0.55rem 0.7rem;
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .weekly-perf-expand-hint:hover { color: var(--text-main); background: var(--lift-3); }
+
+    /* Weekly Performance full-breakdown modal */
+    .weekly-perf-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .weekly-perf-overlay:not([hidden]) { display: flex; }
+    .weekly-perf-overlay.open { opacity: 1; }
+    .weekly-perf-box {
+      width: 100%;
+      max-width: 620px;
+      max-height: min(85vh, 760px);
+      overflow-y: auto;
+      background: var(--surface-popup);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--glass-shadow);
+      padding: var(--space-xl);
+      transform: translateY(16px) scale(0.98);
+      transition: transform 0.25s var(--bounce);
+    }
+    .weekly-perf-overlay.open .weekly-perf-box { transform: translateY(0) scale(1); }
+    .weekly-perf-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); gap: var(--space-md); }
+    .weekly-perf-header h3 { font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .weekly-perf-close { background: none; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer; }
+    .weekly-perf-close:hover { color: var(--text-main); }
+
+    .weekly-perf-day {
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.7rem;
+      overflow: hidden;
+    }
+    .weekly-perf-day-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.7rem 0.9rem;
+      background: var(--glass-highlight);
+      cursor: pointer;
+    }
+    .weekly-perf-day-head:hover { background: var(--lift-3); }
+    .weekly-perf-day-label { font-weight: 700; font-size: 0.88rem; color: var(--text-main); }
+    .weekly-perf-day-label .sub { font-weight: 500; color: var(--text-muted); font-size: 0.76rem; margin-left: 6px; }
+    .weekly-perf-day-right { display: flex; align-items: center; gap: 0.6rem; }
+    .weekly-perf-day-pct {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 99px;
+      background: var(--gold-soft);
+      color: var(--gold-text, var(--gold));
+      white-space: nowrap;
+    }
+    .weekly-perf-day-chevron { transition: transform 0.2s ease; color: var(--text-dim); }
+    .weekly-perf-day.expanded .weekly-perf-day-chevron { transform: rotate(180deg); }
+    .weekly-perf-day-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease;
+    }
+    .weekly-perf-day.expanded .weekly-perf-day-body { max-height: 600px; }
+    .weekly-perf-habit-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--glass-border);
+    }
+    .weekly-perf-habit-row i { width: 16px; text-align: center; flex-shrink: 0; }
+    .weekly-perf-habit-row.done i { color: var(--accent); }
+    .weekly-perf-habit-row.missed i { color: var(--text-dim); }
+    .weekly-perf-habit-row.not-scheduled { color: var(--text-dim); }
+    .weekly-perf-habit-row.not-scheduled i { color: var(--text-dim); }
+    .weekly-perf-habit-row .name { flex: 1; }
+    .weekly-perf-habit-row .tag { font-size: 0.68rem; color: var(--text-dim); }
+
+    .habit-modal-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 1rem; margin-bottom: 1.8rem; }
+    .habit-modal-stat { text-align: center; padding: 1.1rem 0.7rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-md); }
+    .habit-modal-stat .val {
+      font-size: 1.35rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .habit-modal-stat .lbl { font-size: 0.63rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 6px; }
+
+    @media (max-width: 599px) {
+      .habit-insight-row { flex-direction: column; align-items: flex-start; }
+      .habit-details-btn { align-self: flex-end; margin-top: -2.3rem; }
+
+      /* ---- Main analytics — substantially smaller on mobile ---- */
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+      }
+      .stat-card { padding: 0.6rem 0.3rem; }
+      .stat-value { font-size: 1.25rem; }
+      .stat-label { font-size: 0.62rem; margin-top: 3px; }
+
+      .stats-grid-account {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+      }
+      .stat-tile { gap: 0.35rem; }
+      .stat-tile .dash-icon { width: 2.5rem; height: 2.5rem; font-size: 1rem; }
+      .stat-tile .dash-stat-value { font-size: clamp(1.1rem, 5vw, 1.4rem); }
+      .stat-tile .dash-meta { font-size: 0.58rem; letter-spacing: 0.4px; }
+      .stat-ring { width: 62px; height: 62px; }
+      .stat-ring::before { inset: 6px; }
+      .stat-ring span { font-size: 0.85rem; }
+
+      /* ---- Habit Insights — collapsible on mobile, starts closed ---- */
+      .habit-insights-toggle { display: flex; }
+      .habit-insights-card.collapsed .habit-insights-body {
+        max-height: 0;
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
 
     <nav class="navbar">
         <div class="navbar-left">
-            <a href="home.html"><img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Logo" class="logo"></a>
+            <a href="home.html"><img src="./images/etho_logo-removebg-preview.png" alt="Logo" class="logo"></a>
         </div>
         <div class="navbar-right">
-            <span class="username"><i class="fa-solid fa-user"></i> User</span>
+            <span class="account-pill" id="account-pill" title="Signed in"><i class="fa-solid fa-crown"></i></span>
+      <span class="username"><i class="fa-regular fa-circle-user"></i> User</span>
         </div>
     </nav>
 
@@ -90,10 +711,14 @@
       <ul>
         <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
         <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="tracker.html" class="active"><i class="fa-solid fa-fire"></i> Tracker</a></li>
+        <li><a href="agenda.html"><i class="fa-solid fa-calendar-days"></i> Agenda</a></li>
         <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
-        <li><a href="tracker.html" class="active"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
-        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
-        <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+        <li><a href="consistency.html"><i class="fa-solid fa-calendar-check"></i> Consistency</a></li>
+        <li><a href="fitness.html"><i class="fa-solid fa-dumbbell"></i> Fitness</a></li>
+        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Library</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+        <li><a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
       </ul>
     </nav>
   </aside>
@@ -103,14 +728,16 @@
     <div></div>
     <div></div>
   </div>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <div class="sidebar-overlay" id="overlay"></div>
 
   <main class="main">
     
-    <div class="header">
-      <h1>Momentum Tracker</h1>
-      <p>Consistency is the key to mastery.</p>
-    </div>
+    <header class="header dash-header-row" style="text-align:left; margin-bottom: var(--space-xl);">
+      <div>
+        <h1 style="margin-bottom:0.2rem;">Momentum Tracker</h1>
+        <h2 style="font-size:1.05rem; font-weight:400; color:var(--text-muted); margin:0;">Consistency is the key to mastery.</h2>
+      </div>
+    </header>
 
     <div class="stats-grid">
       <div class="stat-card">
@@ -127,25 +754,39 @@
       </div>
     </div>
 
-    <div class="dashboard-wrapper">
-      <div class="dashboard-card">
-        <div class="dashboard-content">
-          <div class="chart-container">
-            <canvas id="doughnut-chart"></canvas>
-            <div class="chart-center-text">
-              <span id="dashboard-percentage">0%</span>
-              <small>Complete</small>
-            </div>
-          </div>
-          <div class="dashboard-legend">
-            <h3>Daily Focus</h3>
-            <p>Your habit segments light up as you complete them.</p>
-            <ul id="dashboard-legend-list">
-              </ul>
-          </div>
+    <div class="stats-grid-account">
+      <div class="dash-card stat-tile stat-tile-clickable" data-account-feature data-account-label="Day Streak" data-account-copy="See exactly how many days in a row you've kept every habit alive.">
+        <div class="dash-icon flame"><i class="fa-solid fa-fire"></i></div>
+        <div class="dash-stat-value" id="stat-streak-account">0</div>
+        <div class="dash-meta">Day Streak</div>
+      </div>
+
+      <div class="dash-card stat-tile stat-tile-clickable" data-account-feature data-account-label="Today's Habit Score" data-account-copy="Live percentage of today's habits completed so far.">
+        <div class="stat-ring" id="stat-ring-today">
+          <span id="stat-today-account">0%</span>
         </div>
+        <div class="dash-meta">Today</div>
+      </div>
+
+      <div class="dash-card stat-tile stat-tile-clickable" data-account-feature data-account-label="Total Check-ins" data-account-copy="Your full lifetime habit check-in count, not just a recent window.">
+        <div class="dash-icon"><i class="fa-solid fa-trophy"></i></div>
+        <div class="dash-stat-value" id="stat-total-account">0</div>
+        <div class="dash-meta">Check-ins</div>
+      </div>
+
+      <div class="dash-card stat-tile stat-tile-clickable" data-account-feature data-account-label="Best Streak" data-account-copy="Your all-time longest streak, saved permanently.">
+        <div class="dash-icon"><i class="fa-solid fa-medal"></i></div>
+        <div class="dash-stat-value" id="stat-best-account">0</div>
+        <div class="dash-meta">Best Streak</div>
+      </div>
+
+      <div class="dash-card stat-tile stat-tile-clickable" data-account-feature data-account-label="Perfect Days" data-account-copy="Days where every single habit was completed, tracked and counted.">
+        <div class="dash-icon"><i class="fa-solid fa-star"></i></div>
+        <div class="dash-stat-value" id="stat-perfect-account">0</div>
+        <div class="dash-meta">Perfect Days</div>
       </div>
     </div>
+
 
     <section class="checklist-flex">
       
@@ -159,6 +800,8 @@
           <button class="btn-primary" id="add-habit-btn" style="padding: 0.4rem 1rem; font-size:0.8rem;">Add</button>
         </div>
 
+        <div class="habit-templates" id="habit-templates"></div>
+
         <ul class="checklist-tasks-list" id="habits-list">
           </ul>
       </div>
@@ -169,9 +812,12 @@
           Your activity over the last 7 days.
         </p>
         
-        <div style="position: relative; height: 250px; width: 100%;">
+        <div class="weekly-perf-chart-wrap" id="weekly-perf-chart-wrap" role="button" tabindex="0" title="View full daily breakdown">
             <canvas id="progress-chart"></canvas>
         </div>
+        <button type="button" class="weekly-perf-expand-hint" id="weekly-perf-expand-btn">
+          <i class="fa-solid fa-table-list"></i> View full breakdown
+        </button>
 
         <div class="quote" id="motivational-quote" style="margin-top: 2rem; font-size: 0.9rem;"></div>
 
@@ -181,12 +827,121 @@
       </div>
 
     </section>
+
+    <section class="dash-card habit-insights-card" id="habit-insights-card" data-account-feature data-account-label="Habit Insights" data-account-copy="Full daily activity across your entire history, not just the last few days.">
+      <div class="dash-card-top">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <h3><i class="fa-solid fa-chart-line"></i> Habit Insights</h3>
+          <span class="dash-badge"><i class="fa-solid fa-crown"></i> Account</span>
+        </div>
+        <button type="button" class="habit-insights-toggle" id="habit-insights-toggle" aria-expanded="true" aria-controls="habit-insights-body" title="Show/hide Habit Insights">
+          <i class="fa-solid fa-chevron-down hi-chevron"></i>
+        </button>
+      </div>
+      <div class="habit-insights-body" id="habit-insights-body">
+        <p class="insights-sub">Every habit, fully tracked — daily activity across your whole history, not just the last few days.</p>
+
+        <div class="insights-heatmap-wrap">
+          <div class="insights-heatmap-months" id="insights-heatmap-months"></div>
+          <div class="heatmap-grid" id="insights-heatmap-grid"></div>
+        </div>
+        <div class="heatmap-legend">
+          <span>Less</span>
+          <div class="heatmap-cell" data-level="0"></div>
+          <div class="heatmap-cell" data-level="1"></div>
+          <div class="heatmap-cell" data-level="2"></div>
+          <div class="heatmap-cell" data-level="3"></div>
+          <div class="heatmap-cell" data-level="4"></div>
+          <span>More</span>
+        </div>
+
+        <div class="habit-insight-list" id="habit-insight-list"></div>
+      </div>
+    </section>
+
+    <div class="habit-modal-overlay" id="habit-modal-overlay" hidden>
+      <div class="habit-modal-box">
+        <div class="habit-modal-header">
+          <h3><i class="fa-solid fa-chart-simple"></i> <span id="habit-modal-title">Habit</span></h3>
+          <button class="habit-modal-close" id="habit-modal-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="habit-modal-stats" id="habit-modal-stats"></div>
+        <div class="insights-heatmap-wrap">
+          <div class="insights-heatmap-months" id="habit-modal-heatmap-months"></div>
+          <div class="heatmap-grid" id="habit-modal-heatmap-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="habit-edit-overlay" id="habit-edit-overlay" hidden>
+      <div class="habit-edit-box">
+        <div class="habit-edit-header">
+          <h3><i class="fa-solid fa-pen"></i> Edit Habit</h3>
+          <button class="habit-edit-close" id="habit-edit-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="habit-edit-form">
+          <div class="habit-edit-group">
+            <label for="habit-edit-name">Name</label>
+            <input type="text" id="habit-edit-name" maxlength="60" required>
+          </div>
+          <div class="habit-edit-group">
+            <label>Frequency</label>
+            <div class="habit-edit-freq-pills">
+              <button type="button" class="habit-edit-freq-pill active" id="habit-edit-freq-daily">Daily</button>
+              <button type="button" class="habit-edit-freq-pill" id="habit-edit-freq-custom">Custom days</button>
+            </div>
+            <div class="habit-edit-days" id="habit-edit-days"></div>
+          </div>
+          <div class="habit-edit-actions">
+            <button type="button" class="habit-edit-cancel" id="habit-edit-cancel">Cancel</button>
+            <button type="submit" class="checklist-add-btn"><i class="fa-solid fa-check"></i> Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="weekly-perf-overlay" id="weekly-perf-overlay" hidden>
+      <div class="weekly-perf-box">
+        <div class="weekly-perf-header">
+          <h3><i class="fa-solid fa-table-list"></i> Weekly Breakdown</h3>
+          <button class="weekly-perf-close" id="weekly-perf-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="weekly-perf-days"></div>
+      </div>
+    </div>
+
+    <section class="quote-rotator" id="quote-rotator" aria-live="polite">
+      <blockquote id="quote-text"></blockquote>
+      <cite id="quote-author"></cite>
+    </section>
   </main>
 
-  <footer class="footer">
-    <p>&copy; 2025 Productivity Dashboard. Stay Consistent.</p>
-  </footer>
+    <footer class="footer">
+        <p>Copyright &copy; 2026. Made with ❤️ by <a href="https://www.youtube.com/channel/UCQCIuukPO_pf-xuCOfHNweg" target="_blank">@Gmindset02</a>.</p>
+    </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="account-base.js"></script>
+  <script src="cloud-sync.js"></script>
+  <script src="dialogs.js"></script>
+  <script src="consistency-prompt.js"></script>
   <script src="tracker.js"></script>
+
+  <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <a href="home.html" class="mbn-item"><i class="fa-solid fa-house"></i>Home</a>
+    <a href="checklist.html" class="mbn-item"><i class="fa-solid fa-list-check"></i>Today</a>
+    <a href="goals.html" class="mbn-item"><i class="fa-solid fa-bullseye"></i>Goals</a>
+    <a href="consistency.html" class="mbn-item"><i class="fa-solid fa-chart-line"></i>Progress</a>
+    <button type="button" class="mbn-item" id="mbn-more" aria-label="More"><i class="fa-solid fa-bars"></i>More</button>
+  </nav>
+  <script>
+    document.getElementById('mbn-more')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('overlay')?.classList.toggle('active');
+    });
+  </script>
+
 </body>
 </html>

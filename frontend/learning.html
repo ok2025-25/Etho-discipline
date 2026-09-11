@@ -1,22 +1,715 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>document.documentElement.style.visibility = "hidden";</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Learning Notes</title>
+  <title>Knowledge Hub</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&display=swap" rel="stylesheet">
+  <link rel="icon" href="./images/favicon.ico">
+  <style>
+    /* ====== Daily Insight strip ====== */
+    .hub-quote-strip {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-xl);
+      animation: fadeInUp 0.6s var(--bounce);
+    }
+    .hub-quote-strip i {
+      font-size: 1.3rem;
+      color: var(--accent);
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+    .hub-quote-text {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--text-main);
+      transition: opacity 0.4s ease;
+    }
+    .hub-quote-author {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+      transition: opacity 0.4s ease;
+    }
+    .hub-quote-author::before { content: "— "; }
+
+    /* ====== Tabs ====== */
+    .hub-tabs {
+      display: flex;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .hub-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 0.8rem 0.4rem;
+      cursor: pointer;
+      position: relative;
+      transition: var(--transition-fast);
+    }
+    .hub-tab:hover { color: var(--text-main); }
+    .hub-tab.active { color: var(--text-main); }
+    .hub-tab.active::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: -1px;
+      height: 2px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 2px;
+    }
+    /* The global [data-account-feature].account-locked treatment (auth.js) now
+       draws a gold ribbon badge via ::after and a hover glow — this just
+       tunes it for a small tab button instead of a card: skip the
+       corner-ribbon position (too cramped on a text tab) and keep an
+       inline lock glyph instead, but let the shared hover/opacity rules
+       apply as-is. */
+    .hub-tab[data-account-feature].account-locked::after {
+      content: "\f023";
+      position: static;
+      width: auto; height: auto;
+      background: none;
+      box-shadow: none;
+      border-radius: 0;
+      font-size: 0.65rem;
+      color: var(--gold-text);
+      margin-left: 4px;
+      display: inline;
+    }
+    .hub-tab[data-account-feature].account-locked:hover::after { animation: none; }
+
+    .hub-panel { display: none; }
+    .hub-panel.active { display: block; }
+
+    /* ====== Library ====== */
+    .library-toolbar {
+      margin-bottom: var(--space-md);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+    .library-toolbar .search-wrapper { max-width: 360px; margin-bottom: 0; flex: 1; }
+    #choose-for-me-btn { flex-shrink: 0; padding: 0.65rem 1.1rem; font-size: 0.85rem; }
+
+    .lesson-card.chosen-pulse { animation: hubChosenPulse 1.4s ease; }
+    @keyframes hubChosenPulse {
+      0% { box-shadow: 0 0 0 0 var(--primary-glow); border-color: var(--primary); }
+      70% { box-shadow: 0 0 0 14px rgba(0,0,0,0); border-color: var(--primary); }
+      100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); border-color: var(--glass-border); }
+    }
+
+    .library-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin: var(--space-md) 0 var(--space-xl);
+    }
+    .library-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--glass-highlight);
+      color: var(--text-muted);
+      border: 1px solid var(--glass-border);
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .library-chip:hover {
+      background: var(--lift-3);
+      color: var(--text-main);
+    }
+    .library-chip.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 2px 12px var(--primary-glow);
+    }
+
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--space-lg);
+    }
+
+    /* Mobile-only "Show more" for the Library/Quotes grids — same idiom
+       as the Goals list toggle and the single-lesson view's own
+       Show more/Show less button. */
+    .library-show-more-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      margin-top: var(--space-md);
+      padding: 0.65rem;
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .library-show-more-btn:hover { border-color: var(--primary); color: var(--text-main); }
+    .library-show-more-btn .lsm-chevron { transition: transform 0.2s ease; }
+    .library-show-more-btn.expanded .lsm-chevron { transform: rotate(180deg); }
+
+    @media (max-width: 599px) {
+      .library-grid.collapsible { max-height: 760px; overflow: hidden; }
+      .library-grid.collapsible.expanded { max-height: none; }
+      .library-show-more-btn.show { display: flex; }
+    }
+
+    .lesson-card {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .lesson-card:hover {
+      border-color: var(--primary-soft);
+      transform: translateY(-3px);
+      box-shadow: var(--glass-shadow);
+    }
+    .lesson-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+    .lesson-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--primary-soft);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .lesson-fav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px;
+      transition: var(--transition-fast);
+    }
+    .lesson-fav-btn:hover { color: var(--primary); transform: scale(1.1); }
+    .lesson-fav-btn.active { color: var(--primary); }
+    .lesson-fav-btn.active i { font-weight: 900; }
+
+    .lesson-category {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+    }
+    .lesson-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0;
+    }
+    .lesson-summary {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      flex: 1;
+    }
+    .lesson-takeaway {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text-main);
+      background: var(--recess-1);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.75rem;
+    }
+    .lesson-takeaway i { color: var(--primary); margin-top: 2px; }
+    .lesson-meta {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .library-empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-dim);
+      font-style: italic;
+      grid-column: 1 / -1;
+    }
+
+    /* ====== Wisdom Wheel ====== */
+    .wheel-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-xl);
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-lg);
+      flex-wrap: wrap;
+    }
+    .wheel-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .wheel-card-info h3 {
+      font-size: 1.3rem;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .wheel-card-info p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: var(--space-md);
+      max-width: 320px;
+    }
+    #spin-wheel-btn.spinning i { animation: hubSpinIcon 0.6s linear infinite; }
+    @keyframes hubSpinIcon { to { transform: rotate(360deg); } }
+
+    .wheel-wrap {
+      position: relative;
+      width: 170px;
+      height: 170px;
+      flex-shrink: 0;
+    }
+    .wheel-pointer {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5rem;
+      color: var(--text-main);
+      z-index: 2;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+    .wheel-dial {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      position: relative;
+      border: 4px solid var(--glass-border);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.45), inset 0 0 24px rgba(0,0,0,0.35);
+      transition: transform 3.1s cubic-bezier(0.15, 0.9, 0.2, 1);
+    }
+    .wheel-segment-icon {
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.92);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    .wheel-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 34px;
+      height: 34px;
+      margin: -17px;
+      border-radius: 50%;
+      background: var(--bg-body);
+      border: 3px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-size: 0.85rem;
+      z-index: 1;
+    }
+
+    .quote-reveal {
+      display: none;
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-xl);
+      text-align: center;
+    }
+    .quote-reveal.pop { animation: hubQuotePop 0.5s var(--bounce); }
+    @keyframes hubQuotePop {
+      from { opacity: 0; transform: scale(0.94) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .quote-reveal > i.fa-quote-left {
+      color: var(--accent);
+      font-size: 1.2rem;
+      opacity: 0.6;
+      margin-bottom: 0.5rem;
+    }
+    .quote-reveal p {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-size: 1.25rem;
+      color: var(--text-main);
+      max-width: 540px;
+      margin: 0 auto 0.5rem;
+    }
+    .quote-reveal span {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .reveal-actions {
+      display: flex;
+      gap: var(--space-sm);
+      justify-content: center;
+      margin-top: var(--space-lg);
+    }
+    .reveal-actions button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .reveal-actions button:hover {
+      color: var(--text-main);
+      background: var(--lift-3);
+    }
+    #reveal-fav-btn.active {
+      color: var(--primary);
+      border-color: var(--primary-soft);
+    }
+
+    @media (max-width: 700px) {
+      .wheel-card { flex-direction: column; text-align: center; }
+      .wheel-card-info p { max-width: 100%; }
+    }
+
+    .quotes-browse-title {
+      font-size: 1.05rem;
+      color: var(--text-main);
+      margin: var(--space-xl) 0 var(--space-sm);
+    }
+
+    .quote-browser-card {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      transition: var(--transition);
+    }
+    .quote-browser-card:hover {
+      border-color: var(--primary-soft);
+      transform: translateY(-2px);
+    }
+    .quote-browser-card p {
+      font-family: 'Fraunces', serif;
+      font-style: italic;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      line-height: 1.5;
+      flex: 1;
+    }
+    .quote-browser-card .quote-browser-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .quote-browser-author {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* ====== Custom lesson card affordances ====== */
+    .lesson-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .lesson-custom-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.64rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-dim);
+      margin-left: 6px;
+    }
+    .lesson-edit-btn, .lesson-delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 4px;
+      transition: var(--transition-fast);
+    }
+    .lesson-edit-btn:hover { color: var(--primary); transform: scale(1.1); }
+    .lesson-delete-btn:hover { color: #e05555; transform: scale(1.1); }
+
+    /* ====== Lesson form modal (create/edit a custom lesson) ====== */
+    #lesson-form-overlay .template-library-box { max-width: 520px; }
+    .lesson-form-group { margin-bottom: var(--space-md); }
+    .lesson-form-group label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 0.3rem 0.7rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.01em;
+      transition: var(--transition-fast);
+    }
+    .lesson-form-group label::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--primary);
+      flex-shrink: 0;
+    }
+    .lesson-form-group:focus-within label {
+      background: var(--lift-3);
+      border-color: var(--primary-soft);
+    }
+    .lesson-form-group input[type="text"],
+    .lesson-form-group textarea {
+      width: 100%;
+      background: var(--recess-1);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-family: inherit;
+      line-height: 1.5;
+      transition: var(--transition);
+    }
+    .lesson-form-group input[type="text"]:focus,
+    .lesson-form-group textarea:focus {
+      background: var(--recess-2);
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: none;
+      transform: none;
+    }
+    .lesson-form-group input[type="text"]::placeholder,
+    .lesson-form-group textarea::placeholder {
+      color: var(--text-dim);
+      opacity: 0.6;
+    }
+    .lesson-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+    .lesson-form-group textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+    .icon-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .icon-picker-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .icon-picker-btn:hover { color: var(--text-main); background: var(--lift-3); }
+    .icon-picker-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 2px 12px var(--primary-glow);
+    }
+    .lesson-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-sm);
+      margin-top: var(--space-lg);
+    }
+    .lesson-form-cancel {
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      padding: 0.65rem 1.2rem;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .lesson-form-cancel:hover { color: var(--text-main); background: var(--lift-3); }
+
+    @media (max-width: 560px) {
+      .lesson-form-row { grid-template-columns: 1fr; }
+    }
+
+    .lesson-form-optional {
+      font-size: 0.72rem;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--text-dim);
+    }
+
+    /* ====== Read full lesson affordance on the card ====== */
+    .lesson-card { cursor: pointer; }
+    .lesson-read-more {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-top: -2px;
+    }
+
+    /* ====== Full Lesson Read Modal ====== */
+    .lesson-view-box { max-width: 620px; }
+    .lesson-view-heading { display: flex; align-items: flex-start; gap: var(--space-md); }
+    .lesson-view-icon { width: 44px; height: 44px; font-size: 1.15rem; }
+    .lesson-view-heading .lesson-category { display: inline-flex; align-items: center; margin-bottom: 4px; }
+    #lesson-view-title { margin: 0; }
+
+    .lesson-view-scroll {
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      padding-right: 4px;
+    }
+    .lesson-view-body { color: var(--text-main); font-size: 0.92rem; line-height: 1.7; }
+    .lesson-view-body p { margin: 0 0 1em; }
+    .lesson-view-body p:last-child { margin-bottom: 0; }
+
+    .lesson-view-more-btn {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: none;
+      color: var(--primary);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0.4rem 0;
+      margin-bottom: var(--space-sm);
+    }
+    .lesson-view-more-btn i { transition: transform 0.2s ease; }
+
+    .lesson-view-takeaway { margin-top: var(--space-md); font-size: 0.88rem; }
+
+    .lesson-view-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--space-sm);
+      margin-top: var(--space-lg);
+      padding-top: var(--space-md);
+      border-top: 1px solid var(--glass-border);
+    }
+    .lesson-view-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 0.55rem 0.9rem;
+    }
+    #lesson-view-fav-btn.lesson-view-action-btn { margin-right: auto; }
+    #lesson-view-fav-btn.lesson-view-action-btn.active { color: var(--primary); border-color: var(--primary-soft); }
+
+    /* Long lessons are capped and collapsible on mobile only — on desktop
+       the modal box itself scrolls, so a second collapse layer would just
+       be redundant friction. */
+    @media (max-width: 599px) {
+      .lesson-view-body { max-height: 260px; overflow: hidden; position: relative; }
+      .lesson-view-body.expanded { max-height: none; }
+      .lesson-view-more-btn { display: flex; }
+    }
+  </style>
 </head>
 <body>
 
   <nav class="navbar">
     <div class="navbar-left">
-      <a href="home.html"><img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Logo" class="logo"></a>
-    </div>
+        <a href="home.html"><img src="./images/etho_logo-removebg-preview.png" alt="Logo" class="logo"></a>
+      </div>
     <div class="navbar-right">
-      <span class="username"><i class="fa-solid fa-user-astronaut"></i>User</span>
-    </div>
+        <span class="account-pill" id="account-pill" title="Signed in"><i class="fa-solid fa-crown"></i></span>
+      <span class="username"><i class="fa-regular fa-circle-user"></i> User</span>
+      </div>
   </nav>
 
   <div class="burger" id="burger">
@@ -25,67 +718,279 @@
     <div></div>
   </div>
 
+  <div class="sidebar-overlay" id="overlay"></div>
   <aside class="sidebar" id="sidebar">
     <h2>Menu</h2>
     <nav>
       <ul>
         <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
         <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="tracker.html"><i class="fa-solid fa-fire"></i> Tracker</a></li>
+        <li><a href="agenda.html"><i class="fa-solid fa-calendar-days"></i> Agenda</a></li>
         <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
-        <li><a href="tracker.html"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
-        <li><a href="learning.html" class="active"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
-        <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+        <li><a href="consistency.html"><i class="fa-solid fa-calendar-check"></i> Consistency</a></li>
+        <li><a href="fitness.html"><i class="fa-solid fa-dumbbell"></i> Fitness</a></li>
+        <li><a href="learning.html" class="active"><i class="fa-solid fa-graduation-cap"></i> Library</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+        <li><a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
       </ul>
     </nav>
   </aside>
 
   <main class="main">
-    <header class="header">
-      <h1>Knowledge Base 📘</h1>
-      <p>Capture your thoughts, ideas, and daily learnings.</p>
+    <header class="header dash-header-row" style="text-align:left; margin-bottom: var(--space-xl);">
+      <div>
+        <h1 style="margin-bottom:0.2rem;">Knowledge Hub</h1>
+        <h2 style="font-size:1.05rem; font-weight:400; color:var(--text-muted); margin:0;">Learn something useful, write down what matters, apply it.</h2>
+      </div>
     </header>
 
-    <div class="learning-container">
-      
-      <aside class="card notes-sidebar-card">
-        <div class="notes-header">
-            <h3>Your Notes</h3>
-            <button id="new-note-btn" class="checklist-add-btn">
-                <i class="fa-solid fa-plus"></i> New
-            </button>
-        </div>
-        <div class="search-wrapper">
-            <i class="fa-solid fa-search search-icon"></i>
-            <input type="text" placeholder="Search notes..." id="search-notes">
-        </div>
-        <ul id="notes-list" class="styled-notes-list">
-            <li class="empty-state">Loading notes...</li>
-        </ul>
-      </aside>
-
-      <section class="card note-editor-card">
-        <div class="editor-toolbar">
-            <input type="text" id="note-title" placeholder="Untitled Note" class="title-input" />
-            <div class="editor-actions">
-                <button id="save-note-btn" class="btn-primary">
-                    <i class="fa-solid fa-floppy-disk"></i> Save
-                </button>
-            </div>
-        </div>
-        <textarea id="note-content" placeholder="Start typing your next big idea here..."></textarea>
-        <div class="editor-footer">
-            <small><i class="fa-solid fa-markdown"></i> Markdown supported (concept)</small>
-            <small id="word-count">0 words</small>
-        </div>
-      </section>
-
+    <div class="hub-quote-strip">
+      <i class="fa-solid fa-quote-left"></i>
+      <div>
+        <div class="hub-quote-text" id="hub-quote-text">Loading today's insight…</div>
+        <span class="hub-quote-author" id="hub-quote-author"></span>
+      </div>
     </div>
+
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-tab="notes">
+        <i class="fa-solid fa-note-sticky"></i> My Notes
+      </button>
+      <button class="hub-tab" data-tab="library" id="library-tab-btn" data-account-feature data-account-label="Learning Library" data-account-copy="Save lessons, take notes and build a personal library of knowledge you can return to.">
+        <i class="fa-solid fa-book-open"></i> Library
+      </button>
+      <button class="hub-tab" data-tab="quotes" id="quotes-tab-btn" data-account-feature data-account-label="Quotes" data-account-copy="Favorite ideas and a daily quote wheel, saved to your own collection.">
+        <i class="fa-solid fa-dice"></i> Quotes
+      </button>
+    </div>
+
+    <!-- ===== NOTES TAB (unchanged logic, same IDs) ===== -->
+    <div class="hub-panel active" id="panel-notes">
+      <div class="learning-container">
+
+        <aside class="card notes-sidebar-card">
+          <div class="notes-header">
+              <h3>Your Notes</h3>
+              <button id="new-note-btn" class="checklist-add-btn">
+                  <i class="fa-solid fa-plus"></i> New
+              </button>
+          </div>
+          <div class="search-wrapper">
+              <i class="fa-solid fa-search search-icon"></i>
+              <input type="text" placeholder="Search notes..." id="search-notes">
+          </div>
+          <ul id="notes-list" class="styled-notes-list">
+              <li class="empty-state">Loading notes...</li>
+          </ul>
+        </aside>
+
+        <section class="card note-editor-card">
+          <div class="editor-toolbar">
+              <input type="text" id="note-title" placeholder="Untitled Note" class="title-input" />
+              <div class="editor-actions">
+                  <button id="save-note-btn" class="btn-primary">
+                      <i class="fa-solid fa-floppy-disk"></i> Save
+                  </button>
+              </div>
+          </div>
+          <textarea id="note-content" placeholder="Start typing your next big idea here..."></textarea>
+          <div class="editor-footer">
+              <small><i class="fa-solid fa-markdown"></i> Markdown supported (concept)</small>
+              <small id="word-count">0 words</small>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- ===== LIBRARY TAB (account) ===== -->
+    <div class="hub-panel" id="panel-library">
+      <div class="library-toolbar">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-search search-icon"></i>
+          <input type="text" placeholder="Search lessons..." id="search-lessons">
+        </div>
+        <button type="button" class="checklist-add-btn" id="new-lesson-btn">
+          <i class="fa-solid fa-plus"></i> New Lesson
+        </button>
+        <button type="button" class="checklist-add-btn" id="choose-for-me-btn">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Choose for me
+        </button>
+      </div>
+      <div class="library-filters" id="library-filters"></div>
+      <div class="library-grid" id="library-grid"></div>
+      <button type="button" class="library-show-more-btn" id="library-show-more-btn" aria-expanded="false">
+        <i class="fa-solid fa-chevron-down lsm-chevron"></i> <span>Show more</span>
+      </button>
+    </div>
+
+    <!-- ===== QUOTES TAB (account) ===== -->
+    <div class="hub-panel" id="panel-quotes">
+
+      <div class="wheel-card">
+        <div class="wheel-card-info">
+          <div class="wheel-eyebrow"><i class="fa-solid fa-dice"></i> Wisdom Wheel</div>
+          <h3>Try your luck</h3>
+          <p>Spin for a random insight, pulled from a growing library of quotes.</p>
+          <button class="checklist-add-btn" id="spin-wheel-btn"><i class="fa-solid fa-shuffle"></i> Spin</button>
+        </div>
+        <div class="wheel-wrap">
+          <div class="wheel-pointer"><i class="fa-solid fa-caret-down"></i></div>
+          <div class="wheel-dial" id="wheel-dial"></div>
+        </div>
+      </div>
+
+      <div class="quote-reveal" id="quote-reveal">
+        <i class="fa-solid fa-quote-left"></i>
+        <p id="reveal-quote-text"></p>
+        <span id="reveal-quote-author"></span>
+        <div class="reveal-actions">
+          <button type="button" id="reveal-fav-btn"><i class="fa-regular fa-heart"></i> Save</button>
+          <button type="button" id="spin-again-btn"><i class="fa-solid fa-rotate-right"></i> Spin again</button>
+        </div>
+      </div>
+
+      <h3 class="quotes-browse-title">Browse the collection</h3>
+
+      <div class="library-toolbar">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-search search-icon"></i>
+          <input type="text" placeholder="Search quotes or authors..." id="search-quotes">
+        </div>
+      </div>
+      <div class="library-filters" id="quotes-filters"></div>
+      <div class="library-grid" id="quotes-grid"></div>
+      <button type="button" class="library-show-more-btn" id="quotes-show-more-btn" aria-expanded="false">
+        <i class="fa-solid fa-chevron-down lsm-chevron"></i> <span>Show more</span>
+      </button>
+    </div>
+
+    <section class="quote-rotator" id="quote-rotator" aria-live="polite">
+      <blockquote id="quote-text"></blockquote>
+      <cite id="quote-author"></cite>
+    </section>
+
   </main>
 
-  <footer class="footer">
-    <p>Copyright &copy; Made with ❤️ by Xyz</p>
-  </footer>
+  <!-- ===== CREATE / EDIT LESSON MODAL ===== -->
+  <div class="template-library-overlay" id="lesson-form-overlay" hidden>
+    <div class="template-library-box">
+      <div class="template-library-header">
+        <div>
+          <h3 id="lesson-form-title"><i class="fa-solid fa-feather-pointed"></i> New Lesson</h3>
+          <p class="template-library-sub">Write a short, useful lesson for your own Library.</p>
+        </div>
+        <button type="button" class="template-library-close" id="lesson-form-close" aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
 
+      <form id="lesson-form">
+        <input type="hidden" id="lesson-form-id" />
+
+        <div class="lesson-form-row">
+          <div class="lesson-form-group">
+            <label for="lesson-form-title-input">Title</label>
+            <input type="text" id="lesson-form-title-input" placeholder="e.g. Rest Is Productive" maxlength="80" required />
+          </div>
+          <div class="lesson-form-group">
+            <label for="lesson-form-category">Category</label>
+            <input type="text" id="lesson-form-category" list="lesson-category-list" placeholder="e.g. Discipline" maxlength="30" required />
+            <datalist id="lesson-category-list"></datalist>
+          </div>
+        </div>
+
+        <div class="lesson-form-group">
+          <label>Icon</label>
+          <div class="icon-picker" id="lesson-icon-picker"></div>
+          <input type="hidden" id="lesson-form-icon" value="fa-solid fa-lightbulb" />
+        </div>
+
+        <div class="lesson-form-group">
+          <label for="lesson-form-summary">Summary</label>
+          <textarea id="lesson-form-summary" placeholder="What's the idea, in a couple of sentences?" maxlength="280" required></textarea>
+        </div>
+
+        <div class="lesson-form-group">
+          <label for="lesson-form-content">Full lesson <span class="lesson-form-optional">(optional — shown in the full read view; leave blank to just show the summary)</span></label>
+          <textarea id="lesson-form-content" placeholder="Write as much as you want here. Separate paragraphs with a blank line." maxlength="4000" rows="6"></textarea>
+        </div>
+
+        <div class="lesson-form-group">
+          <label for="lesson-form-takeaway">Takeaway</label>
+          <textarea id="lesson-form-takeaway" placeholder="One concrete action to take from this." maxlength="140" required></textarea>
+        </div>
+
+        <div class="lesson-form-actions">
+          <button type="button" class="lesson-form-cancel" id="lesson-form-cancel">Cancel</button>
+          <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Lesson</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== FULL LESSON READ MODAL ===== -->
+  <div class="template-library-overlay" id="lesson-view-overlay" hidden>
+    <div class="template-library-box lesson-view-box">
+      <div class="template-library-header">
+        <div class="lesson-view-heading">
+          <div class="lesson-icon lesson-view-icon" id="lesson-view-icon"></div>
+          <div>
+            <span class="lesson-category" id="lesson-view-category"></span>
+            <h3 id="lesson-view-title"></h3>
+          </div>
+        </div>
+        <button type="button" class="template-library-close" id="lesson-view-close" aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="lesson-view-scroll">
+        <div class="lesson-view-body" id="lesson-view-body"></div>
+        <button type="button" class="lesson-view-more-btn" id="lesson-view-more-btn" style="display:none;">
+          <i class="fa-solid fa-chevron-down"></i> Show more
+        </button>
+        <div class="lesson-takeaway lesson-view-takeaway" id="lesson-view-takeaway"></div>
+      </div>
+
+      <div class="lesson-view-actions">
+        <button type="button" class="lesson-edit-btn lesson-view-action-btn" id="lesson-view-edit-btn" style="display:none;" title="Edit lesson">
+          <i class="fa-solid fa-pen"></i> Edit
+        </button>
+        <button type="button" class="lesson-delete-btn lesson-view-action-btn" id="lesson-view-delete-btn" style="display:none;" title="Delete lesson">
+          <i class="fa-solid fa-trash"></i> Delete
+        </button>
+        <button type="button" class="lesson-fav-btn lesson-view-action-btn" id="lesson-view-fav-btn"></button>
+      </div>
+    </div>
+  </div>
+
+    <footer class="footer">
+        <p>Copyright &copy; 2026. Made with ❤️ by <a href="https://www.youtube.com/channel/UCQCIuukPO_pf-xuCOfHNweg" target="_blank">@Gmindset02</a>.</p>
+    </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="account-base.js"></script>
+  <script src="cloud-sync.js"></script>
+  <script src="dialogs.js"></script>
   <script src="learning.js"></script>
+
+  <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <a href="home.html" class="mbn-item"><i class="fa-solid fa-house"></i>Home</a>
+    <a href="checklist.html" class="mbn-item"><i class="fa-solid fa-list-check"></i>Today</a>
+    <a href="goals.html" class="mbn-item"><i class="fa-solid fa-bullseye"></i>Goals</a>
+    <a href="consistency.html" class="mbn-item"><i class="fa-solid fa-chart-line"></i>Progress</a>
+    <button type="button" class="mbn-item" id="mbn-more" aria-label="More"><i class="fa-solid fa-bars"></i>More</button>
+  </nav>
+  <script>
+    document.getElementById('mbn-more')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('overlay')?.classList.toggle('active');
+    });
+  </script>
+
 </body>
 </html>

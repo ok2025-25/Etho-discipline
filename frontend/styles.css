@@ -1,43 +1,24 @@
-/* ====== 1. VARIABLES & THEME SYSTEM ====== */
+/* ====== 1. VARIABLES & THEME SYSTEM ======
+   Light is the default, main theme (:root) — available to every user,
+   free or Pro. Dark is an optional alternate palette, applied via a
+   data-theme="dark" attribute on <html>, toggled from auth.js. Both
+   are full palettes: every token below gets redefined in the dark
+   override, so backgrounds, text, borders, glows, hovers, inputs, and
+   solid chrome surfaces (navbar, footer, dropdowns, popups) all shift
+   together instead of the app just getting a darker background. */
 :root {
-  /* Brand Colors - Neon & Vibrant */
-  --primary: #8b5cf6;       
-  --primary-glow: rgba(139, 92, 246, 0.5);
-  --primary-soft: rgba(139, 92, 246, 0.15);
-  --secondary: #ec4b9e;     
-  --secondary-glow: rgba(236, 75, 158, 0.4);
-  --accent: #06b6d4;        
-  --accent-glow: rgba(6, 182, 212, 0.4);
-  
-  /* Backgrounds - Deep & Glassy */
-  --bg-body: #05050a;
-  --bg-blob: radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.15), transparent 25%), 
-             radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%),
-             radial-gradient(circle at 50% 100%, rgba(6, 182, 212, 0.08), transparent 30%);
-  --glass-surface: rgba(30, 41, 59, 0.45); 
-  --glass-surface-hover: rgba(30, 41, 59, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-highlight: rgba(255, 255, 255, 0.05);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-
-  /* Text Colors */
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  
-  /* UI Elements */
+  /* UI Elements — shared across both themes */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-xl: 24px;
   --nav-height: 70px;
-  
+
   /* Transitions */
   --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-  
   /* Spacing Scale */
   --space-xs: 0.5rem;
   --space-sm: 0.75rem;
@@ -46,6 +27,111 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
   --space-3xl: 4rem;
+
+  /* Brand Colors */
+  --primary: #C4283F;
+  --primary-glow: rgba(196, 40, 63, 0.18);
+  --primary-soft: rgba(196, 40, 63, 0.08);
+  --secondary: #7A1420;
+  --secondary-glow: rgba(122, 20, 32, 0.16);
+  --accent: #B0304A;
+  --accent-glow: rgba(176, 48, 74, 0.18);
+
+  /* Backgrounds - Warm Cream */
+  --bg-body: #FBF5F2;
+  --bg-blob:
+    radial-gradient(circle at 15% 50%, rgba(196, 40, 63, 0.06), transparent 35%),
+    radial-gradient(circle at 85% 30%, rgba(122, 20, 32, 0.06), transparent 35%),
+    radial-gradient(circle at 50% 100%, rgba(90, 20, 30, 0.045), transparent 40%);
+
+  --glass-surface: rgba(255, 255, 255, 0.78);
+  --glass-surface-hover: rgba(255, 255, 255, 0.94);
+  --glass-border: rgba(122, 20, 32, 0.14);
+  --glass-highlight: rgba(196, 40, 63, 0.045);
+  --glass-shadow: 0 10px 32px rgba(90, 20, 30, 0.09);
+
+  /* Text Colors — real dark-on-light contrast, not a tinted wash */
+  --text-main: #2A1418;
+  --text-muted: #6E4D50;
+  --text-dim: #A2888B;
+
+  /* Hovers darken on a light surface (the inverse of dark mode, where
+     hovers lighten). */
+  --lift-1: rgba(32, 16, 20, 0.035);
+  --lift-2: rgba(32, 16, 20, 0.05);
+  --lift-3: rgba(32, 16, 20, 0.07);
+  --lift-4: rgba(32, 16, 20, 0.09);
+
+  /* Recessed inputs/checkboxes: a soft warm-grey recess instead of a
+     literal black box, which would look like a smudge on cream. */
+  --recess-1: rgba(122, 20, 32, 0.04);
+  --recess-2: rgba(122, 20, 32, 0.06);
+  --recess-3: rgba(122, 20, 32, 0.08);
+  --recess-4: rgba(122, 20, 32, 0.10);
+
+  --surface-navbar: rgba(255, 255, 255, 0.88);
+  --surface-footer: rgba(255, 255, 255, 0.92);
+  --surface-popup: #FFFDFB;
+  --surface-dropdown: rgba(255, 255, 255, 0.94);
+
+  /* Pro accent — gold, reused from the existing smart-banner gradient
+     so "premium" reads consistently everywhere it shows up. Darkened
+     from the dark-theme gold so it stays legible as text on cream
+     instead of washing out. */
+  --gold: #B8860B;
+  --gold-deep: #96690A;
+  --gold-text: #8A6410;
+  --gold-glow: rgba(184, 134, 11, 0.22);
+  --gold-soft: rgba(184, 134, 11, 0.12);
+}
+
+/* ====== DARK THEME (optional, both plans) ====== */
+html[data-theme="dark"] {
+  /* Brand Colors - Blood Red & Dark */
+  --primary: #E8001C;
+  --primary-glow: rgba(232, 0, 28, 0.55);
+  --primary-soft: rgba(232, 0, 28, 0.13);
+  --secondary: #8B0000;
+  --secondary-glow: rgba(139, 0, 0, 0.5);
+  --accent: #FF4444;
+  --accent-glow: rgba(255, 68, 68, 0.4);
+
+  /* Backgrounds - Deep Red-Tinted Black */
+  --bg-body: #080508;
+  --bg-blob: radial-gradient(circle at 15% 50%, rgba(232, 0, 28, 0.12), transparent 35%),
+             radial-gradient(circle at 85% 30%, rgba(139, 0, 0, 0.14), transparent 35%),
+             radial-gradient(circle at 50% 100%, rgba(100, 0, 0, 0.1), transparent 40%);
+  --glass-surface: rgba(20, 5, 5, 0.80);
+  --glass-surface-hover: rgba(30, 8, 8, 0.92);
+  --glass-border: rgba(139, 0, 0, 0.45);
+  --glass-highlight: rgba(232, 0, 28, 0.06);
+  --glass-shadow: 0 8px 32px rgba(32, 32, 32, 0.7);
+
+  /* Text Colors */
+  --text-main: #FFFFFF;
+  --text-muted: #C9A8A8;
+  --text-dim: #6B3030;
+
+  --lift-1: rgba(255, 255, 255, 0.03);
+  --lift-2: rgba(255, 255, 255, 0.05);
+  --lift-3: rgba(255, 255, 255, 0.08);
+  --lift-4: rgba(255, 255, 255, 0.1);
+
+  --recess-1: rgba(0, 0, 0, 0.2);
+  --recess-2: rgba(0, 0, 0, 0.3);
+  --recess-3: rgba(0, 0, 0, 0.4);
+  --recess-4: rgba(0, 0, 0, 0.5);
+
+  --surface-navbar: rgba(8, 3, 3, 0.94);
+  --surface-footer: rgba(5, 5, 10, 0.95);
+  --surface-popup: #150a0a;
+  --surface-dropdown: rgba(10, 10, 20, 0.9);
+
+  --gold: #d4af37;
+  --gold-deep: #b8860b;
+  --gold-text: #f0d68a;
+  --gold-glow: rgba(85, 65, 0, 0.25);
+  --gold-soft: rgba(212, 175, 55, 0.14);
 }
 
 /* ====== 2. RESET & BASE ====== */
@@ -75,6 +161,10 @@ a {
   text-decoration: none; 
   color: inherit; 
   transition: var(--transition); 
+}
+
+a :hover { 
+  color: var(--text-main); 
 }
 
 button, input, select { 
@@ -110,6 +200,260 @@ button, input, select {
   background: var(--primary-soft);
   color: var(--text-main);
 }
+
+/* ====== SMART DUOLINGO-STYLE REMINDER BANNER ====== */
+@keyframes smartBannerIn {
+  from { opacity: 0; transform: translateY(-18px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes smartBannerOut {
+  from { opacity: 1; transform: translateY(0) scale(1); max-height: 200px; margin-bottom: 1.5rem; }
+  to   { opacity: 0; transform: translateY(-12px) scale(0.97); max-height: 0; margin-bottom: 0; padding: 0; }
+}
+
+.smart-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(90,100,64,0.15) 60%, rgba(61,67,72,0.13) 100%);
+  border: 1.5px solid rgba(232, 0, 28, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.4rem 1.1rem 1.4rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 24px rgba(212,175,55,0.12), inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter: blur(16px);
+  animation: smartBannerIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  overflow: hidden;
+}
+
+/* Subtle shimmer stripe */
+.smart-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.04) 50%, transparent 62%);
+  pointer-events: none;
+}
+
+.smart-banner-close {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.75rem;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-muted);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: var(--transition-fast);
+  z-index: 2;
+}
+
+.smart-banner-close:hover {
+  background: rgba(255,255,255,0.14);
+  color: var(--text-main);
+  transform: scale(1.12) rotate(90deg);
+}
+
+.smart-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.smart-banner-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px rgba(212,175,55,0.5));
+  animation: smartBannerIn 0.5s 0.1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.smart-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.smart-banner-label {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: 4px;
+  padding: 1px 7px;
+  width: fit-content;
+  margin-bottom: 0.15rem;
+}
+
+.smart-banner-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.smart-banner-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  max-width: 340px;
+}
+
+/* Pill row */
+.smart-banner-pills {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-right: 1.5rem; /* space for close btn */
+}
+
+.smart-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: 99px;
+  cursor: default;
+  transition: var(--transition-fast);
+  border: 1.5px solid transparent;
+  white-space: nowrap;
+}
+
+.smart-pill span {
+  font-weight: 400;
+  font-size: 0.74rem;
+}
+
+.smart-pill:hover {
+  transform: translateY(-2px) scale(1.07);
+}
+
+.smart-pill-s {
+  background: rgba(212,175,55,0.14);
+  border-color: rgba(212,175,55,0.4);
+  color: #FF6060;
+}
+.smart-pill-m {
+  background: rgba(90,100,64,0.15);
+  border-color: rgba(90,100,64,0.45);
+  color: #C97A7A;
+}
+.smart-pill-a {
+  background: rgba(61,67,72,0.25);
+  border-color: rgba(61,67,72,0.6);
+  color: #B8BCC2;
+}
+.smart-pill-r {
+  background: rgba(212,175,55,0.10);
+  border-color: rgba(212,175,55,0.3);
+  color: #FF4444;
+}
+.smart-pill-t {
+  background: rgba(127,255,0,0.08);
+  border-color: rgba(127,255,0,0.3);
+  color: #FF4444;
+}
+
+@media (max-width: 768px) {
+  .smart-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.1rem;
+  }
+  .smart-banner-pills {
+    padding-right: 0;
+  }
+  .smart-pill span {
+    display: none;
+  }
+  .smart-pill {
+    padding: 0.3rem 0.55rem;
+    font-size: 0.82rem;
+  }
+  .smart-banner-sub {
+    display: none;
+  }
+}
+
+.smart-pill { cursor: pointer; }
+.smart-pill:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ----- Small SMART badges next to goal-creator field labels ----- */
+.smart-field-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  font-size: 0.62rem;
+  font-weight: 800;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: var(--transition-fast);
+}
+.smart-field-badge:hover,
+.smart-field-badge:focus-visible {
+  transform: scale(1.15);
+  outline: none;
+}
+
+/* ----- SMART letter explanation popup ----- */
+.smart-info-box { max-width: 420px; }
+.smart-info-heading { display: flex; align-items: center; gap: var(--space-md); }
+.smart-info-letter-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+#smart-info-word { margin: 2px 0 0; font-size: 1.15rem; }
+.smart-info-explanation {
+  color: var(--text-main);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin: var(--space-md) 0;
+}
+.smart-info-field-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  background: var(--recess-1);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+}
+.smart-info-field-hint i { color: var(--primary); }
+.smart-info-field-hint strong { color: var(--text-main); }
+
 
 .smart-list {
   list-style-type: none;
@@ -169,18 +513,27 @@ button, input, select {
 }
 
 .card:hover {
-  border-color: rgba(139, 92, 246, 0.3);
+  border-color: rgba(232, 0, 28, 0.45);
   background: var(--glass-surface-hover);
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.2),
+  box-shadow: 0 0 30px rgba(232, 0, 28, 0.18),
               var(--glass-shadow),
-              inset 0 1px 0 rgba(255, 255, 255, 0.08);
+              inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transform: translateY(-3px);
+}
+
+.card-clickable {
+  cursor: pointer;
+}
+
+.card-clickable:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
 }
 
 .card h3 {
   font-size: 1.5rem;
   margin-bottom: var(--space-sm);
-  background: linear-gradient(135deg, #fff, var(--text-muted), var(--primary));
+  background: linear-gradient(135deg, var(--text-main), var(--text-muted), var(--primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -220,11 +573,11 @@ button, input, select {
 
 .checklist-tasks-col:hover, 
 .checklist-templates-col:hover {
-  border-color: rgba(139, 92, 246, 0.3);
+  border-color: rgba(232, 0, 28, 0.4);
   background: var(--glass-surface-hover);
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.2),
+  box-shadow: 0 0 30px rgba(232, 0, 28, 0.15),
               var(--glass-shadow),
-              inset 0 1px 0 rgba(255, 255, 255, 0.08);
+              inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transform: translateY(-3px);
 }
 
@@ -324,7 +677,7 @@ button, input, select {
 .template-btn:hover, 
 .category-btn:hover, 
 .checklist-history-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--lift-4);
   color: var(--text-main);
   border-color: var(--glass-border);
   transform: translateX(5px);
@@ -346,8 +699,9 @@ button, input, select {
 
 /* Inputs & Selects */
 input[type="text"], 
+input[type="password"],
 select {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--recess-3);
   border: 1px solid var(--glass-border);
   color: var(--text-main);
   padding: 0.7rem 1rem;
@@ -359,8 +713,8 @@ select {
 input:focus, 
 select:focus {
   border-color: var(--primary);
-  background: rgba(0, 0, 0, 0.5);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15),
+  background: var(--recess-4);
+  box-shadow: 0 0 0 3px rgba(232, 0, 28, 0.18),
               0 4px 12px rgba(0, 0, 0, 0.3);
   transform: translateY(-1px);
 }
@@ -372,7 +726,7 @@ select:focus {
   left: 0; 
   right: 0;
   height: var(--nav-height);
-  background: rgba(5, 5, 10, 0.85);
+  background: var(--surface-navbar);
   backdrop-filter: blur(16px) saturate(180%);
   border-bottom: 1px solid var(--glass-border);
   display: flex;
@@ -384,13 +738,13 @@ select:focus {
 }
 
 .logo { 
-  height: 2.5rem; 
-  filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.4));
+  height: 5rem; 
+  filter: drop-shadow(0 0 12px rgba(232, 0, 28, 0.5));
   transition: var(--transition);
 }
 
 .logo:hover {
-  filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6));
+  filter: drop-shadow(0 0 20px rgba(232, 0, 28, 0.75));
   transform: scale(1.05);
 }
 
@@ -408,13 +762,21 @@ select:focus {
 }
 
 .username:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--lift-3);
   border-color: var(--primary);
 }
 
 .username i { 
   font-size: 1.1rem;
   color: var(--primary);
+}
+
+.navbar-avatar {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 /* Sidebar - Floating on Desktop */
@@ -444,7 +806,7 @@ select:focus {
   opacity: 1;
   pointer-events: auto;
   box-shadow: var(--glass-shadow),
-              0 0 40px rgba(139, 92, 246, 0.15);
+              0 0 40px rgba(232, 0, 28, 0.1);
 }
 
 .sidebar h2 { 
@@ -495,7 +857,7 @@ select:focus {
 
 .sidebar a:hover, 
 .sidebar a.active {
-  background: linear-gradient(90deg, rgba(139, 92, 246, 0.12), transparent);
+  background: linear-gradient(90deg, rgba(232, 0, 28, 0.15), transparent);
   color: var(--primary);
   transform: translateX(3px);
 }
@@ -598,7 +960,7 @@ select:focus {
 .header h1 { 
   font-size: 3rem; 
   font-weight: 800; 
-  background: linear-gradient(135deg, #fff, var(--text-muted), var(--primary)); 
+  background: linear-gradient(135deg, var(--text-main), var(--text-muted), var(--primary)); 
   -webkit-background-clip: text; 
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -611,6 +973,49 @@ select:focus {
   color: var(--text-muted); 
   font-size: 1.1rem;
   font-weight: 400;
+}
+
+/* Checklist / Routine Tabs */
+.checklist-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 auto var(--space-2xl);
+  padding: 5px;
+  background: var(--glass-highlight);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  width: fit-content;
+  animation: fadeIn 1s ease;
+}
+
+.checklist-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.65rem 1.3rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.checklist-tab-btn i {
+  font-size: 0.85rem;
+}
+
+.checklist-tab-btn:hover {
+  color: var(--text-main);
+}
+
+.checklist-tab-btn.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  box-shadow: 0 4px 16px var(--primary-glow);
 }
 
 /* Progress Bar - Enhanced Glow */
@@ -637,7 +1042,7 @@ select:focus {
 .checklist-progress-bar-bg { 
   width: 100%; 
   height: 10px; 
-  background: rgba(255, 255, 255, 0.05); 
+  background: var(--lift-2); 
   border-radius: var(--radius-md); 
   overflow: hidden;
   border: 1px solid var(--glass-border);
@@ -704,8 +1109,8 @@ select:focus {
 }
 
 .checklist-task-item:hover { 
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(139, 92, 246, 0.3);
+  background: var(--lift-1);
+  border-color: rgba(232, 0, 28, 0.4);
   transform: translateX(3px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -728,7 +1133,7 @@ select:focus {
   position: relative;
   transition: var(--transition);
   flex-shrink: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--recess-2);
 }
 
 .checklist-task-checkbox:hover {
@@ -762,15 +1167,20 @@ select:focus {
 
 .checklist-task-label {
   flex: 1; 
+  min-width: 0; /* without this, an <input>'s intrinsic content width can force
+    the flex row (and the page) wider than the viewport once someone types a
+    long task name — this is what caused horizontal scrolling on long names */
   font-size: 1rem; 
   padding: var(--space-xs); 
   border-radius: var(--radius-sm);
   transition: var(--transition);
   background: transparent;
+  text-overflow: ellipsis; /* unfocused long text trails off with "…" instead
+    of just being cut, so it's visually clear there's more to it */
 }
 
 .checklist-task-label:focus { 
-  background: rgba(0, 0, 0, 0.5); 
+  background: var(--recess-4); 
   outline: 2px solid var(--primary); 
   outline-offset: 2px;
 }
@@ -804,9 +1214,295 @@ select:focus {
 
 .checklist-action-btn:hover { 
   color: var(--secondary); 
-  background: rgba(236, 75, 158, 0.1);
+  background: rgba(139, 0, 0, 0.15);
   transform: scale(1.1);
 }
+
+/* Drag handle for reordering tasks (mouse + touch via SortableJS) */
+.task-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--text-dim);
+  cursor: grab;
+  flex-shrink: 0;
+  touch-action: none; /* let SortableJS own touch gestures on the handle instead of the page scrolling */
+  transition: var(--transition-fast);
+}
+
+.task-drag-handle:hover {
+  color: var(--text-muted);
+}
+
+.task-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Placeholder shown in the list while a task is being dragged */
+.task-drag-ghost {
+  opacity: 0.4;
+  background: var(--glass-highlight);
+}
+
+/* ====== TASK HOUR BADGE + CRONOMETER-STYLE TIME PICKER ====== */
+
+/* Clickable time badge, sits just before the task label */
+.checklist-task-hour {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(232, 0, 28, 0.35), rgba(139, 0, 0, 0.35));
+  border: 1px solid var(--primary);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.4rem 0.7rem;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 14px rgba(232, 0, 28, 0.35);
+}
+
+.checklist-task-hour i {
+  color: var(--text-main);
+  font-size: 0.75rem;
+}
+
+.checklist-task-hour:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 20px rgba(232, 0, 28, 0.55);
+  filter: brightness(1.12);
+}
+
+/* No hour set yet — still bright/visible, but reads as "tap to set" rather
+   than "already scheduled" */
+.checklist-task-hour.empty {
+  background: rgba(232, 0, 28, 0.14);
+  border: 1px dashed var(--accent);
+  color: var(--text-main);
+  box-shadow: 0 0 10px rgba(232, 0, 28, 0.18);
+}
+
+.checklist-task-hour.empty i {
+  color: var(--accent);
+}
+
+.checklist-task-hour.empty:hover {
+  background: rgba(232, 0, 28, 0.26);
+  border-style: solid;
+  box-shadow: 0 0 16px rgba(232, 0, 28, 0.35);
+}
+
+.checklist-task-hour.empty:hover i {
+  color: var(--text-main);
+}
+
+.checklist-task-item.completed .checklist-task-hour {
+  opacity: 0.4;
+}
+
+/* Popup panel — compact "timer editor": chevron up/down to dial in the
+   hour and minute, inspired by a native timer-edit sheet rather than a
+   plain scroll list */
+.time-picker-popup {
+  position: fixed;
+  z-index: 600;
+  width: 252px;
+  background: var(--surface-popup);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow), 0 0 30px rgba(232, 0, 28, 0.18);
+  padding: var(--space-md);
+  animation: fadeInDown 0.2s ease;
+}
+
+.time-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.time-picker-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.time-picker-title i {
+  color: var(--primary);
+}
+
+.time-picker-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.time-picker-delete:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: scale(1.08);
+}
+
+.time-picker-display {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+}
+
+.time-picker-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* The AM/PM unit only needs to fit 2 letters, so it stays narrow instead
+   of eating as much width as the hour/minute columns */
+.time-picker-unit.time-picker-period {
+  flex: 0 0 46px;
+}
+
+.time-picker-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 22px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+  font-size: 0.75rem;
+}
+
+.time-picker-arrow:hover {
+  color: var(--accent);
+  background: rgba(232, 0, 28, 0.1);
+}
+
+.time-picker-arrow:active {
+  transform: scale(0.88);
+}
+
+.time-picker-value {
+  width: 100%;
+  text-align: center;
+  font-size: 1.65rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  padding: 4px 0 8px;
+  border-bottom: 3px solid var(--glass-border);
+  transition: var(--transition-fast);
+  user-select: none;
+}
+
+.time-picker-period .time-picker-value {
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  padding-top: 10px;
+}
+
+.time-picker-unit.active .time-picker-value {
+  color: var(--text-main);
+  border-bottom-color: var(--primary);
+  box-shadow: 0 6px 10px -6px var(--primary-glow);
+  background: rgba(232, 0, 28, 0.08);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.time-picker-colon {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-dim);
+  align-self: flex-end;
+  padding-bottom: 12px;
+}
+
+.time-picker-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: var(--space-md);
+}
+
+.time-picker-reminder-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--glass-border);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.time-picker-reminder-note i { color: var(--accent); flex-shrink: 0; }
+
+.time-picker-save,
+.time-picker-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: 1px solid var(--glass-border);
+}
+
+.time-picker-save {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px var(--primary-glow);
+}
+
+.time-picker-save:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.time-picker-cancel {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: transparent;
+}
+
+.time-picker-cancel:hover {
+  background: var(--lift-3);
+  color: var(--text-main);
+}
+
 
 /* Categories Grid */
 .categories { 
@@ -826,15 +1522,15 @@ select:focus {
 
 .category-btn { 
   width: auto; 
-  background: rgba(6, 182, 212, 0.1); 
+  background: rgba(232, 0, 28, 0.1); 
   color: var(--accent); 
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  border: 1px solid rgba(232, 0, 28, 0.2);
   padding-right: 2.5rem;
   position: relative;
 }
 
 .category-btn:hover { 
-  background: rgba(6, 182, 212, 0.2);
+  background: rgba(232, 0, 28, 0.2);
   color: var(--accent); 
   box-shadow: 0 0 20px var(--accent-glow);
   border-color: var(--accent);
@@ -888,6 +1584,218 @@ select:focus {
   transform: scale(1.1);
 }
 
+/* ====== CUSTOM DIALOGS (replaces native confirm()/prompt()) ====== */
+.custom-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  /* Confirm/prompt dialogs must always sit above every other overlay
+     (template library, systems modal, upgrade modal, etc. all use
+     z-index 1000 or below) since they can be triggered from inside
+     any of them — e.g. "Activate this System?" while the Systems
+     modal is open. */
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-md);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.custom-dialog-overlay.open {
+  opacity: 1;
+}
+
+.custom-dialog-box {
+  background: var(--glass-surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  transform: translateY(8px) scale(0.98);
+  transition: transform 0.15s ease;
+}
+
+.custom-dialog-overlay.open .custom-dialog-box {
+  transform: translateY(0) scale(1);
+}
+
+.custom-dialog-icon {
+  font-size: 1.8rem;
+  color: var(--primary);
+  margin-bottom: var(--space-md);
+}
+
+.custom-dialog-body p {
+  color: var(--text-main);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: var(--space-md);
+}
+
+.custom-dialog-input {
+  width: 100%;
+  background: var(--recess-3);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 1rem; /* 16px — prevents iOS auto-zoom on focus */
+  margin-top: var(--space-xs);
+}
+
+.custom-dialog-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  margin-top: var(--space-lg);
+}
+
+.custom-dialog-btn {
+  flex: 1;
+  min-height: 44px; /* real touch target on mobile, no separate override needed */
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border: 1px solid var(--glass-border);
+}
+
+.custom-dialog-cancel {
+  background: var(--lift-2);
+  color: var(--text-muted);
+}
+
+.custom-dialog-cancel:hover {
+  background: var(--lift-4);
+  color: var(--text-main);
+}
+
+.custom-dialog-confirm {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  border-color: transparent;
+}
+
+.custom-dialog-confirm:hover {
+  filter: brightness(1.1);
+}
+
+.custom-dialog-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.custom-dialog-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* ====== HISTORY SECTION ====== */
+
+.checklist-history {
+  margin-top: 2rem;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 1rem;
+}
+
+.checklist-history-btn {
+  background: rgba(232, 0, 28, 0.1) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid rgba(232, 0, 28, 0.2) !important;
+  margin: 0 !important;
+}
+
+.checklist-history-btn:hover {
+  background: rgba(232, 0, 28, 0.15) !important;
+  color: var(--primary) !important;
+  border-color: rgba(232, 0, 28, 0.5) !important;
+  transform: none !important;
+  box-shadow: 0 0 16px rgba(232, 0, 28, 0.15) !important;
+}
+
+.checklist-history-btn i {
+  color: var(--primary);
+}
+
+.checklist-history-btn:hover i {
+  transform: rotate(-20deg) scale(1.15) !important;
+  color: var(--primary) !important;
+}
+
+.checklist-history-dropdown {
+  background: var(--surface-dropdown) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0.6rem !important;
+  margin-top: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: fadeInDown 0.25s ease;
+  list-style-type: none !important;
+}
+
+#history-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+#history-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.55rem 0.85rem !important;
+  border-radius: var(--radius-sm);
+  border-bottom: none !important;
+  background: var(--lift-1);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+#history-list li:hover {
+  background: rgba(232, 0, 28, 0.1);
+  border-color: rgba(232, 0, 28, 0.3);
+  color: var(--text-main);
+  transform: translateX(4px);
+}
+
+#history-list li::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+#history-list li small {
+  font-size: 0.76rem;
+  color: var(--primary);
+  background: rgba(232, 0, 28, 0.1);
+  border: 1px solid rgba(232, 0, 28, 0.3);
+  padding: 2px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  margin-right: auto;
+}
+
 /* Quote Section */
 .quote {
   text-align: center;
@@ -901,17 +1809,1051 @@ select:focus {
 
 /* Footer */
 .footer {
-  margin-top: auto; 
+  margin-top: 2rem; 
   padding: var(--space-xl); 
   text-align: center; 
   color: var(--text-dim); 
   font-size: 0.85rem;
   border-top: 1px solid var(--glass-border); 
-  background: rgba(5, 5, 10, 0.95);
+  background: var(--surface-footer);
   backdrop-filter: blur(10px);
 }
 
-/* ====== 6. LEARNING PAGE SPECIFIC ====== */
+/* ====== 5.5 DASHBOARD CARD SYSTEM (reusable across every page) ======
+   Originally lived as a page-scoped <style> block in home.html. Moved
+   here so any page can build a dashboard out of the same
+   .dash-* classes without redefining them — this is the "solid base"
+   every future Pro pass builds on top of, instead of re-styling each
+   page from scratch. Uses var(--space-*) and clamp() throughout so it
+   already inherits the app's responsive breakpoint scale-down and
+   needs no page-specific media queries for spacing/type size. */
+
+.dash-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  text-align: left;
+}
+
+.dash-date {
+  color: var(--text-muted);
+  font-size: 0.55rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.4rem;
+  margin-left: 0.9rem;
+}
+
+.dash-header-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 0.7rem 1.2rem;
+}
+
+.dash-header-stat i { color: var(--primary); font-size: 1.2rem; }
+.dash-header-stat-value { font-size: 1.3rem; font-weight: 800; color: var(--text-main); line-height: 1; }
+.dash-header-stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+/* ---- Today's Progress + Etho Score — ONE combined card (not two separate
+   glass panels) so mobile gets a single scroll-stop instead of stacking two
+   full-width cards on top of each other. Row on desktop, stacked+compact on
+   mobile via the media query further down. ---- */
+.today-hero-card {
+  margin: var(--space-xl) clamp(1rem, 5vw, 5rem) 0;
+  background: var(--glass-surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  align-items: stretch;
+}
+
+.today-hero-progress {
+  flex: 1.6;
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+.today-hero-progress:hover { background: var(--glass-highlight); }
+
+.today-hero-divider { width: 1px; background: var(--glass-border); margin: var(--space-lg) 0; }
+
+.today-hero-score {
+  flex: 1;
+  padding: var(--space-lg) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.today-progress-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin-bottom: 0.6rem; }
+.today-progress-fraction { font-size: 2.2rem; font-weight: 800; color: var(--text-main); line-height: 1; margin-bottom: 1rem; }
+.today-progress-fraction-unit { font-size: 1rem; font-weight: 500; color: var(--text-muted); }
+.today-progress-bar-bg { height: 12px; margin-bottom: 0.6rem; }
+.today-progress-pct { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.1rem; }
+
+.etho-score-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin-bottom: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.etho-score-crown { display: none; color: var(--gold); font-size: 0.75rem; }
+.etho-score-ring-wrap { position: relative; width: 96px; height: 96px; margin-bottom: 0.6rem; }
+.etho-score-ring { width: 96px; height: 96px; transform: rotate(-90deg); }
+.etho-score-ring-bg { fill: none; stroke: var(--glass-border); stroke-width: 10; }
+.etho-score-ring-fill {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 326.7; /* 2*pi*52 */
+  stroke-dashoffset: 326.7;
+  transition: stroke-dashoffset 0.8s var(--bounce);
+}
+.etho-score-value {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 800; color: var(--text-main);
+}
+.etho-score-sub { font-size: 0.85rem; color: var(--text-muted); }
+
+/* ----- Etho Score: Pro flagship treatment -----
+   Once unlocked, the score gets its own gold identity distinct from
+   the rest of the free dashboard — a glowing gradient ring/number and
+   a small crown by the label — instead of just losing a lock icon. */
+[data-plan="account"] .today-hero-score .etho-score-crown { display: inline-flex; }
+[data-plan="account"] .today-hero-score {
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+[data-plan="account"] .today-hero-score:hover { transform: translateY(-2px); }
+[data-plan="account"] .today-hero-score .etho-score-ring-fill {
+  stroke: var(--gold);
+  filter: drop-shadow(0 0 8px var(--gold-glow));
+}
+[data-plan="account"] .today-hero-score .etho-score-value {
+  background: linear-gradient(135deg, var(--gold-text), var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-plan="account"] .today-hero-score .etho-score-sub { color: var(--gold-text); }
+
+/* ----- Etho Score: locked teaser for free users -----
+   Deliberately NOT the generic sitewide dim-and-grayscale lock look —
+   this is the flagship upsell, so it stays fully saturated with a
+   pulsing gold ring and a lock glyph in place of the number. Nothing
+   real is ever rendered here; script.js never computes a value for
+   free users, so there's no number to hide in the first place. */
+.today-hero-score.account-locked {
+  opacity: 1 !important;
+  filter: none !important;
+}
+.today-hero-score.account-locked::after { content: none !important; }
+.today-hero-score.etho-score-teaser .etho-score-ring-bg { stroke: var(--gold-glow); }
+.today-hero-score.etho-score-teaser .etho-score-ring-fill {
+  stroke: var(--gold);
+  opacity: 0.55;
+  animation: ethoScoreTeaserPulse 2.6s ease-in-out infinite;
+}
+.today-hero-score.etho-score-teaser .etho-score-value {
+  color: var(--gold);
+  font-size: 1.25rem;
+}
+.today-hero-score.etho-score-teaser .etho-score-value i { animation: ethoScoreLockPulse 2.6s ease-in-out infinite; }
+.today-hero-score.etho-score-teaser .etho-score-sub {
+  color: var(--gold-text);
+  font-weight: 700;
+}
+@keyframes ethoScoreTeaserPulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+@keyframes ethoScoreLockPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* ---- Today's Checklist — central interactive action component (spec §6) ---- */
+.today-checklist-section {
+  margin: var(--space-lg) clamp(1rem, 5vw, 5rem) 0;
+  background: var(--glass-surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  padding: var(--space-lg) var(--space-xl);
+}
+.today-checklist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+.today-checklist-head h3 { font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
+.today-checklist-head h3 i { color: var(--primary); }
+.today-checklist-open { font-size: 0.82rem; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: var(--transition-fast); }
+.today-checklist-open:hover { color: var(--primary); }
+
+.today-checklist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 344px; /* ~5 rows before scrolling, keeps the card from growing unbounded */
+  overflow-y: auto;
+}
+.today-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-md);
+  background: var(--glass-highlight);
+  border: 1px solid transparent;
+  transition: var(--transition-fast);
+}
+.today-checklist-item:hover { border-color: var(--glass-border); }
+.today-checklist-item.completed { opacity: 0.55; }
+.today-checklist-item.completed .today-checklist-text { text-decoration: line-through; }
+
+.today-checklist-checkbox {
+  width: 20px; height: 20px; flex-shrink: 0; cursor: pointer;
+  accent-color: var(--primary);
+}
+.today-checklist-text { flex: 1; font-size: 0.9rem; color: var(--text-main); }
+.today-checklist-cat { font-size: 0.72rem; color: var(--text-muted); background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: 999px; padding: 2px 8px; margin-left: 6px; }
+.today-checklist-time { font-size: 0.78rem; color: var(--text-muted); flex-shrink: 0; }
+.today-checklist-empty { text-align: center; padding: 1.6rem 1rem; color: var(--text-muted); font-size: 0.88rem; }
+
+/* ---- Mobile: this page stacks a LOT of full-width sections (hero, score,
+   today's checklist, then the card grid) — tighten padding/typography/gaps
+   so it reads as a compact list instead of a wall of oversized glass cards. ---- */
+@media (max-width: 640px) {
+  .dash-header-row { margin-bottom: var(--space-lg) !important; }
+  .dash-header-row h1 { font-size: 1.4rem; }
+  .dash-header-row h2 { font-size: 0.92rem !important; }
+
+  .today-hero-card { flex-direction: column; margin: var(--space-lg) var(--space-md) 0; }
+  .today-hero-divider { width: auto; height: 1px; margin: 0 var(--space-lg); }
+  .today-hero-progress, .today-hero-score { padding: var(--space-lg); border-radius: 0; }
+  .today-progress-fraction { font-size: 1.8rem; margin-bottom: 0.7rem; }
+  .today-progress-pct { margin-bottom: 0.8rem; }
+  .etho-score-ring-wrap, .etho-score-ring { width: 76px; height: 76px; }
+  .etho-score-value { font-size: 1.25rem; }
+
+  .today-checklist-section { margin: var(--space-md) var(--space-md) 0; padding: var(--space-md) var(--space-lg); }
+  .today-checklist-list { max-height: 280px; }
+  .today-checklist-text { font-size: 0.85rem; }
+
+  .dash-layout { margin: var(--space-lg) var(--space-md) 0; gap: var(--space-lg); }
+}
+
+/* ---- Layout grid: hero row + secondary card grid ---- */
+.dash-layout {
+  margin: var(--space-2xl) clamp(1rem, 5vw, 5rem) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.dash-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: var(--space-xl);
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .dash-hero { grid-template-columns: 1fr; }
+}
+
+.dash-hero-card, .dash-card {
+  background: var(--glass-surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--lift-2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.dash-hero-card:hover, .dash-card:hover {
+  border-color: rgba(232, 0, 28, 0.45);
+  background: var(--glass-surface-hover);
+  box-shadow: 0 0 30px var(--primary-glow), var(--glass-shadow), inset 0 1px 0 var(--lift-2);
+  transform: translateY(-3px);
+}
+
+.dash-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.dash-eyebrow i { color: var(--primary); }
+
+.dash-hero-card h3, .dash-card h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.3rem;
+  background: linear-gradient(135deg, var(--text-main), var(--text-muted), var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dash-hero-stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.9rem 0 1rem;
+}
+
+.dash-hero-stat-value { font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 800; color: var(--text-main); line-height: 1; }
+.dash-hero-stat-unit { font-size: 0.95rem; color: var(--text-muted); font-weight: 600; }
+
+.dash-task-preview { list-style: none; margin-top: 1.2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+
+.dash-task-preview li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  padding: 0.55rem 0.75rem;
+  background: var(--lift-1);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+}
+
+.dash-task-preview li i { color: var(--text-dim); font-size: 0.8rem; flex-shrink: 0; }
+.dash-task-preview li .task-cat {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dash-empty-mini { font-size: 0.85rem; color: var(--text-muted); font-style: italic; margin-top: 1rem; }
+
+.dash-cta {
+  margin-top: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 0.88rem;
+}
+
+/* ---- Secondary stat cards ---- */
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  gap: var(--space-lg);
+}
+
+.dash-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+}
+
+.dash-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-highlight);
+  border: 1px solid var(--glass-border);
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+.dash-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid var(--glass-border);
+  white-space: nowrap;
+}
+
+.dash-badge.muted { background: var(--lift-1); color: var(--text-muted); }
+
+.dash-stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.dash-stat-value {
+  font-size: clamp(1.5rem, 3vw, 1.8rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--text-main), var(--text-muted), var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.dash-stat-unit { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.dash-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.7rem; }
+
+/* Small 7-day activity chart — used inside any .dash-card that wants
+   more than a single number (e.g. Weekly Momentum). Bars are set via
+   inline height/class from JS. */
+.week-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  height: 40px;
+  margin: 1rem 0 1.5rem;
+}
+
+.week-chart .week-bar {
+  flex: 1;
+  min-width: 6px;
+  height: 4px;
+  border-radius: 4px 4px 2px 2px;
+  background: var(--lift-2);
+  position: relative;
+  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.week-chart .week-bar.active {
+  background: linear-gradient(180deg, var(--primary), var(--secondary));
+}
+
+.week-chart .week-bar span {
+  position: absolute;
+  bottom: -1.1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.week-chart .week-bar.today span { color: var(--primary); font-weight: 700; }
+
+@media (max-width: 599px) {
+  .dash-grid { grid-template-columns: 1fr 1fr; }
+  .dash-hero-card, .dash-card { padding: var(--space-lg); }
+}
+
+@media (max-width: 380px) {
+  .dash-grid { grid-template-columns: 1fr; }
+}
+
+/* ---- Today screen redesign: primary vs. secondary dashboard cards ----
+   The dashboard had grown into an undifferentiated grid of ~10 equal-
+   weight cards (several of them charts), which reads as an analytics
+   dashboard rather than "what do I do today". Today's Progress + Etho
+   Score hero and the Today's Checklist widget above stay the single
+   primary action surface; below that the grid is now split into an
+   unlabeled primary row (the things you'd actually act on today) and a
+   visually smaller, clearly-secondary "More insights" row (historical/
+   analytics cards) further down the page so it doesn't compete for
+   attention. */
+.dash-section-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin: var(--space-md) 0 calc(var(--space-md) * -0.4);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dash-section-label i { color: var(--text-dim); font-size: 0.85rem; }
+
+.dash-grid-secondary { opacity: 0.88; }
+.dash-grid-secondary .dash-card { padding: var(--space-lg); }
+.dash-grid-secondary .dash-card h3 { font-size: 1.15rem; }
+.dash-grid-secondary .dash-icon { width: 2.1rem; height: 2.1rem; font-size: 0.85rem; }
+.dash-grid-secondary .dash-stat-value { font-size: clamp(1.25rem, 2.5vw, 1.5rem); }
+.dash-grid-secondary .week-chart { height: 30px; margin: 0.8rem 0 1.3rem; }
+
+/* ====== 5.6 PRO EXPERIENCE LAYER (site-wide base) ======
+   Toggled once via [data-plan="account"] on <html> (set in script.js after
+   isSignedIn() resolves) — every page that uses .dash-card / data-account-feature
+   automatically inherits the premium look, no per-page styling needed.
+   Add [data-plan="account"] rules here as new Pro touches are designed;
+   individual pages should not redefine this layer locally. */
+
+.account-pill {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  margin-right: 0.6rem;
+  color: var(--gold-text);
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-glow);
+  white-space: nowrap;
+}
+
+.account-pill i { font-size: 0.7rem; }
+
+[data-plan="account"] .account-pill { display: inline-flex; }
+
+/* Unlocked Pro-only cards get a slow shimmering gold edge instead of a
+   plain glass border — so a purchase visibly *looks* different, not
+   just "unlocked". */
+[data-plan="account"] [data-account-feature] {
+  position: relative;
+  border-color: var(--gold-glow);
+}
+
+[data-plan="account"] [data-account-feature]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, var(--gold), transparent 30%, transparent 70%, var(--gold));
+  background-size: 220% 220%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.55;
+  animation: accountBorderShift 7s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes accountBorderShift {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 220% 220%; }
+}
+
+[data-plan="account"] [data-account-feature] .dash-icon {
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-color: var(--gold-glow);
+}
+
+[data-plan="account"] [data-account-feature] .dash-badge:not(.muted) {
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-color: var(--gold-glow);
+}
+
+[data-plan="account"] [data-account-feature] .week-chart .week-bar.active {
+  background: linear-gradient(180deg, var(--gold), var(--gold-deep));
+}
+
+[data-plan="account"] [data-account-feature] h3 {
+  background: linear-gradient(135deg, var(--gold-text), var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--gold);
+}
+
+[data-plan="account"] [data-account-feature] .dash-meta {
+  color: var(--gold-text);
+  opacity: 0.8;
+}
+
+[data-plan="account"] [data-account-feature] .dash-stat-value,
+[data-plan="account"] [data-account-feature] .dash-hero-stat-value {
+  background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--gold);
+}
+
+[data-plan="account"] [data-account-feature] .dash-cta {
+  color: var(--gold-text);
+}
+
+/* ----- Pro shape & feel upgrade (site-wide) -----
+   Purely presentational: rounder corners, a resting gold glow instead
+   of only-on-hover, and a slightly richer lift. Free users see none
+   of this — same box, same radius, same shadow as always. */
+[data-plan="account"] [data-account-feature] {
+  border-radius: var(--radius-xl);
+  box-shadow: 0 0 24px var(--gold-glow), var(--glass-shadow), inset 0 1px 0 var(--lift-2);
+  padding: clamp(var(--space-xl), 2.4vw, calc(var(--space-xl) + 0.4rem));
+}
+
+[data-plan="account"] [data-account-feature]:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 0 36px var(--gold-glow), var(--glass-shadow), inset 0 1px 0 var(--lift-2);
+}
+
+[data-plan="account"] [data-account-feature] .dash-icon {
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 599px) {
+  [data-plan="account"] [data-account-feature]:hover {
+    transform: none;
+  }
+}
+
+/* ====== 5.7 ROTATING QUOTE (site-wide, matches login page behaviour) ======
+   Fixed min-height keeps the footer from jumping as quote length
+   changes between rotations. */
+.quote-rotator {
+  width: 100%;
+  max-width: 640px;
+  margin: var(--space-3xl) auto 0;
+  padding: 0 var(--space-md);
+  text-align: center;
+  min-height: 4.6rem;
+  /* Belt-and-braces: if this section ever ends up as a child of a flex or
+     grid container (e.g. a future markup change), these keep it centered
+     on its own line instead of collapsing into a single column/track. */
+  grid-column: 1 / -1;
+  align-self: center;
+  justify-self: center;
+}
+
+.quote-rotator blockquote {
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  opacity: 0.75;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.quote-rotator cite {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+  opacity: 0.75;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.quote-rotator.quote-out blockquote,
+.quote-rotator.quote-out cite {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+@media (max-width: 599px) {
+  .quote-rotator blockquote { font-size: 0.95rem; }
+}
+
+/* ====== 5.8 CHECKLIST PRO (page-specific personalization) ======
+   The site-wide Pro layer (5.6) covers shared chrome; this block is
+   checklist.html's own Pro treatment — richer template browsing,
+   entrance animations, and a livelier progress bar. Free users keep
+   the plain static version everywhere below. */
+
+/* Mobile-only category filter toggle (checklist page). Hidden on desktop,
+   where the category sidebar (.categories) is always visible in place;
+   on phones it's replaced by this compact toggle that expands/collapses
+   the same sidebar as a panel right under the task list. */
+.checklist-category-toggle-btn {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--glass-highlight);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  max-width: 55%;
+}
+
+.checklist-category-toggle-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checklist-category-toggle-btn:hover { border-color: var(--primary); }
+
+.checklist-category-toggle-btn.active {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.checklist-category-toggle-btn .cct-chevron {
+  font-size: 0.65rem;
+  transition: transform 0.2s ease;
+  margin-left: auto;
+}
+
+.checklist-category-toggle-btn.active .cct-chevron { transform: rotate(180deg); }
+
+.template-browse-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: var(--space-sm) 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gold-glow);
+  background: var(--gold-soft);
+  color: var(--gold-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.template-browse-btn span { flex: 1; text-align: left; }
+
+.template-browse-arrow { font-size: 0.75rem; transition: var(--transition-fast); }
+
+.template-browse-btn:hover:not(.account-locked) {
+  background: rgba(212, 175, 55, 0.22);
+  border-color: var(--gold);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--gold-glow);
+}
+
+.template-browse-btn:hover:not(.account-locked) .template-browse-arrow {
+  transform: translateX(4px);
+}
+
+/* ----- Task entrance animation (Pro only) ----- */
+@keyframes taskItemIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+[data-plan="account"] .checklist-task-item {
+  animation: taskItemIn 0.4s var(--bounce) both;
+}
+
+/* ----- Progress bar shimmer (Pro only) ----- */
+@keyframes accountBarShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+[data-plan="account"] .checklist-progress-bar-fill {
+  background: linear-gradient(90deg, var(--primary), var(--gold), var(--secondary), var(--primary));
+  background-size: 250% 100%;
+  animation: accountBarShimmer 3.5s linear infinite;
+}
+
+/* ----- Template Library Modal ----- */
+.template-library-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* An author-stylesheet class rule beats the browser's default
+   [hidden] { display: none } even at equal specificity — without this,
+   the overlay's own `display` would win and it'd sit fixed + full-screen
+   over the whole page (invisible via opacity:0, but still catching every
+   click and keystroke) even while [hidden] was set. */
+.template-library-overlay:not([hidden]) { display: flex; }
+
+.template-library-overlay.open { opacity: 1; }
+
+.template-library-box {
+  width: 100%;
+  max-width: 640px;
+  max-height: min(80vh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-popup);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  padding: var(--space-lg);
+  transform: translateY(16px) scale(0.98);
+  transition: transform 0.25s var(--bounce);
+}
+
+.template-library-overlay.open .template-library-box {
+  transform: translateY(0) scale(1);
+}
+
+.template-library-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.template-library-header h3 {
+  font-size: 1.1rem;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.35rem;
+}
+
+.template-library-header h3 i { color: var(--gold); }
+
+.template-library-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  max-width: 420px;
+  line-height: 1.4;
+}
+
+.template-library-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-highlight);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition-fast);
+}
+
+.template-library-close:hover {
+  color: var(--text-main);
+  background: var(--lift-4);
+  transform: rotate(90deg);
+}
+
+.template-library-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.6rem 1rem;
+  background: var(--recess-3);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+  color: var(--text-muted);
+}
+
+.template-library-search input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.template-library-search input:focus {
+  box-shadow: none;
+  transform: none;
+}
+
+.template-library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-sm);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.template-library-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.template-lib-card {
+  width: auto;
+  margin: 0;
+  align-items: center;
+  gap: 12px;
+  animation: taskItemIn 0.35s var(--bounce) both;
+}
+
+.template-lib-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-highlight);
+  border: 1px solid var(--glass-border);
+  color: var(--primary);
+  font-size: 0.95rem;
+}
+
+.template-lib-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.template-lib-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.template-lib-person {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* ----- Etho Systems preview step (reuses .template-library-* shell above) ----- */
+.systems-preview-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-md);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.systems-preview-col h4 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.systems-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.systems-preview-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.systems-preview-list li i {
+  color: var(--primary);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.systems-preview-hour {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.systems-preview-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.systems-preview-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.systems-back-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.systems-back-btn:hover { color: var(--text-main); background: var(--glass-highlight); }
+
+.systems-activate-btn {
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.7rem 1.3rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.systems-activate-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+.systems-activate-btn:disabled { opacity: 0.7; cursor: default; transform: none; }
+
+@media (max-width: 599px) {
+  .template-library-grid { grid-template-columns: 1fr; }
+  .template-library-box { padding: var(--space-md); }
+}
+
+
 
 /* Layout Grid: 300px sidebar, rest is editor */
 .learning-container {
@@ -952,7 +2894,7 @@ select:focus {
 .search-wrapper input {
     width: 100%;
     padding-left: 2.5rem;
-    background: rgba(0,0,0,0.2);
+    background: var(--recess-1);
 }
 
 .search-icon {
@@ -977,7 +2919,7 @@ select:focus {
     display: flex;
     justify-content: space-between; /* Pushes text left, button right */
     align-items: center;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--lift-1);
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     padding: var(--space-md);
@@ -986,7 +2928,7 @@ select:focus {
 }
 
 .note-item:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--lift-3);
     border-color: var(--primary-soft);
     transform: translateX(4px);
 }
@@ -1065,7 +3007,7 @@ select:focus {
 #note-content {
     flex: 1;
     width: 100%;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--recess-1);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     padding: var(--space-lg);
@@ -1078,7 +3020,7 @@ select:focus {
 }
 
 #note-content:focus {
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--recess-2);
     border-color: var(--primary);
     outline: none;
     color: var(--text-main);
@@ -1481,32 +3423,199 @@ width: auto;
     font-size: 1.25rem;
   }
   
-  /* Task items mobile optimization */
+  /* Task items mobile optimization — the row used to cram 8 tap targets
+     (drag handle, checkbox, hour badge, label, category select, up, down,
+     delete) onto one wrapping line, which wrapped unpredictably and made
+     everything fiddly to hit. Reorganized into clean, predictable stacked
+     lines instead: [handle · checkbox · label · delete] then [time] then
+     [category] — each on its own row, nothing crowded. */
   .checklist-task-item {
     gap: var(--space-sm);
     padding: var(--space-sm);
     flex-wrap: wrap;
+    align-items: center;
   }
-  
-  .checklist-task-checkbox {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .checklist-task-label {
-    font-size: 0.95rem;
-  }
-  
-  .checklist-task-controls {
-    opacity: 1; /* Always visible on mobile */
-  }
-  
-  .checklist-action-btn {
-    width: 32px;
-    height: 32px;
+
+  .task-drag-handle {
+    order: 1;
+    width: 36px;
+    height: 36px;
     font-size: 1.1rem;
   }
+
+  .checklist-task-checkbox {
+    order: 2;
+    width: 28px;
+    height: 28px;
+  }
+
+  .checklist-task-label {
+    order: 3;
+    flex: 1 1 auto;
+    min-width: 60px;
+    font-size: 0.92rem;
+    font-weight: 500;
+  }
+
+  /* Only the delete button stays inline with the label — reordering is
+     handled by the drag handle, so the up/down arrow buttons are redundant
+     on touch and are hidden below to cut clutter. */
+  .checklist-task-controls {
+    order: 4;
+    opacity: 1; /* Always visible on mobile */
+    gap: var(--space-xs);
+    flex: 0 0 auto;
+  }
+
+  .checklist-task-controls .checklist-action-btn:nth-child(1),
+  .checklist-task-controls .checklist-action-btn:nth-child(2) {
+    display: none;
+  }
+
+  .checklist-action-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  /* Hour badge gets its own full-width row — bigger, unmistakable tap
+     target instead of a small pill fighting for space next to text */
+  .checklist-task-hour {
+    order: 5;
+    flex: 1 1 100%;
+    justify-content: center;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.7rem;
+    margin-top: var(--space-xs);
+  }
+
+  /* Category select sits under the time as a small secondary chip — auto
+     width instead of full-width, and muted, so it reads as metadata rather
+     than competing with the task label for attention */
+  .checklist-task-item select {
+    order: 6;
+    flex: 0 1 auto;
+    align-self: flex-start;
+    margin-top: var(--space-xs);
+    color: var(--text-muted);
+    background: var(--lift-1);
+  }
+
+  .time-picker-popup {
+    width: min(264px, calc(100vw - 2 * var(--space-md)));
+  }
+
+  .time-picker-arrow {
+    height: 34px;
+    font-size: 0.9rem;
+  }
+
+  .time-picker-value {
+    font-size: 1.5rem;
+  }
+
+  .time-picker-period .time-picker-value {
+    font-size: 0.9rem;
+  }
+
+  /* ---- Checklist header — mobile ----
+     Task area only: title + Add Task keep the row's full focus, with the
+     two secondary controls tucked into corners instead of competing for
+     space. Row 1: [Category toggle - left] ....... [Reminders - right].
+     Row 2: title. Row 3: Add Task, full width. */
+  .checklist-header-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .checklist-category-toggle-btn {
+    display: inline-flex;
+    order: 1;
+  }
+
+  .checklist-header-actions {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .checklist-header-actions .checklist-reminder-controls {
+    order: 1;
+  }
+
+  .checklist-header-actions #add-task-btn {
+    order: 2;
+    flex: 1 1 100%;
+  }
+
+  #tasks-col-title {
+    order: 3;
+    flex: 1 1 100%;
+    margin-top: var(--space-sm);
+  }
+
+  /* Category sidebar collapses into a panel opened from the toggle button
+     above, positioned right after the task list (order) instead of
+     trailing behind Templates far down the page. */
+  .checklist-tasks-col { order: 1; }
+
+  #categories-section {
+    order: 2;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-width: 0;
+    transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease, margin 0.25s ease;
+  }
+
+  #categories-section.mobile-open {
+    max-height: 60vh;
+    opacity: 1;
+    overflow-y: auto;
+    padding-top: var(--space-md);
+    padding-bottom: var(--space-md);
+    margin-bottom: var(--space-md);
+    border-width: 1px;
+  }
+
+  .checklist-templates-col { order: 3; }
+
+  /* Category <select> per task is styled inline via JS (checklist.js),
+     so inline styles win over normal CSS specificity — !important is
+     needed here to override just the tiny 0.8rem/0.3rem sizing on mobile,
+     without touching checklist.js or any desktop styling */
+  .checklist-task-item select {
+    font-size: 1rem !important; /* 16px — anything smaller triggers iOS Safari's auto-zoom-on-focus */
+    padding: 0.6rem 0.75rem !important;
+    min-height: 40px;
+  }
   
+  /* Sitewide minimum input font-size on mobile — anything under 16px makes
+     iOS Safari auto-zoom the viewport on focus, which is jarring on every
+     form in the app (login, goal modal, add-habit, notes, profile, etc).
+     !important is needed because several fields (e.g. the goal modal in
+     goals.html) set font-size inline via JS/HTML, which normally beats
+     external CSS regardless of media query. */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* Learning page note editor got its own sub-16px override at a smaller
+     breakpoint below — restore it to a safe minimum here too. */
+  #note-content {
+    font-size: 16px !important;
+  }
+
   /* Buttons mobile sizing */
   .checklist-add-btn,
   .btn-primary {
@@ -1531,10 +3640,28 @@ width: auto;
   
   .category-btn {
     padding: var(--space-xs) var(--space-md);
-    padding-right: 2rem;
+    padding-right: 2.75rem;
     font-size: 0.8rem;
   }
-  
+
+  /* Category delete "x" — hover doesn't exist on touch, so give it a
+     real always-visible tap target instead of relying on :hover */
+  .category-delete {
+    opacity: 1;
+    width: 32px;
+    height: 32px;
+    right: 4px;
+    font-size: 0.85rem;
+  }
+
+  /* Template delete (custom template trash icon) — was hidden behind
+     :hover, which never fires on touch, making it unreachable on mobile */
+  .template-delete {
+    opacity: 1;
+    padding: 8px;
+    font-size: 1rem;
+  }
+
   /* Learning page mobile */
   .learning-container {
     grid-template-columns: 1fr;
@@ -1688,7 +3815,12 @@ width: auto;
   .checklist-task-label {
     font-size: 0.9rem;
   }
-  
+
+  .checklist-task-hour {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.6rem;
+  }
+
   .checklist-add-btn,
   .btn-primary {
     padding: 0.55rem 1rem;
@@ -1696,10 +3828,24 @@ width: auto;
   }
   
   .template-btn,
-  .category-btn,
   .checklist-history-btn {
     font-size: 0.8rem;
     padding: var(--space-xs) var(--space-sm);
+  }
+
+  /* Category chips need their own rule here — the shared padding above
+     would wipe out the right-side clearance reserved for the delete "x",
+     making it overlap the label text and very hard to tap accurately */
+  .category-btn {
+    font-size: 0.8rem;
+    padding: var(--space-xs) var(--space-sm);
+    padding-right: 2.5rem;
+  }
+
+  /* A little extra gap between chips so a fat-finger tap on one chip's
+     delete cross doesn't land on the neighboring chip */
+  .categories-list {
+    gap: var(--space-md);
   }
   
   .notes-sidebar-card {
@@ -1777,7 +3923,7 @@ width: auto;
 }
 
 /* Landscape orientation adjustments for mobile */
-@media (max-height: 500px) and (orientation: landscape) {
+@media (max-height: 400px) and (orientation: landscape) {
   :root {
     --nav-height: 50px;
   }
@@ -1839,5 +3985,396 @@ width: auto;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+/* ============================================================
+   GOALS PRO — v3 visual redesign
+   Scope: goal cards (progress rings), template gallery, quick
+   -create modal, deadline urgency chips, celebration burst, and
+   the deadline-reminder popup. All colors pull from the live
+   theme variables (--primary/--accent/--gold/--secondary) so
+   this follows dark/light theme switches automatically.
+   ============================================================ */
+
+/* ---------- deadline reminders toggle (header button) ---------- */
+.goal-reminders-toggle {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  transition: var(--transition-fast);
+  border: 1.5px solid var(--glass-border);
+  background: var(--recess-2);
+  color: var(--text-muted);
+}
+.goal-reminders-toggle i { font-size: 0.95rem; }
+.goal-reminders-toggle:hover { transform: translateY(-1px); }
+
+.goal-reminders-toggle.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.goal-reminders-toggle:not(.active) {
+  background: var(--recess-3);
+  color: var(--text-dim);
+}
+.goal-reminders-toggle:not(.active) i { opacity: 0.7; }
+
+/* ---------- shared palette cycle for goal icon chips ---------- */
+.goal-swatch-0 { --goal-c: var(--primary); }
+.goal-swatch-1 { --goal-c: var(--accent); }
+.goal-swatch-2 { --goal-c: var(--gold); }
+.goal-swatch-3 { --goal-c: var(--secondary); }
+
+/* ---------- stat strip (replaces the old 3-number-only summary) ---------- */
+.goals-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+}
+
+.goals-stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: var(--recess-2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 0.9rem;
+  transition: var(--transition-fast);
+  min-width: 0; /* let the grid track shrink the chip instead of forcing its content to overflow the border */
+  overflow: hidden;
+}
+
+.goals-stat-chip:hover { transform: translateY(-2px); background: var(--recess-3); }
+
+.goals-stat-chip-icon {
+  width: 38px; height: 38px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+  background: color-mix(in srgb, var(--goal-c, var(--primary)) 16%, transparent);
+  color: var(--goal-c, var(--primary));
+}
+
+.goals-stat-chip-text { min-width: 0; }
+.goals-stat-chip-value { font-size: 1.4rem; font-weight: 700; color: var(--text-main); line-height: 1.1; }
+.goals-stat-chip-label {
+  font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---------- template gallery (visual, scrollable) ---------- */
+.goal-template-scroller {
+  display: flex;
+  gap: 0.85rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  scroll-snap-type: x proximity;
+}
+
+.goal-template-scroller::-webkit-scrollbar { height: 6px; }
+.goal-template-scroller::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 999px; }
+
+.goal-template-card {
+  scroll-snap-align: start;
+  flex: 0 0 168px;
+  background: var(--recess-2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 0.9rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.goal-template-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--goal-c, var(--primary));
+  box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+}
+
+.goal-template-icon {
+  width: 42px; height: 42px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  background: color-mix(in srgb, var(--goal-c, var(--primary)) 18%, transparent);
+}
+
+.goal-template-title { font-size: 0.88rem; font-weight: 600; color: var(--text-main); line-height: 1.3; }
+.goal-template-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.3rem; }
+
+.goal-template-locked {
+  position: absolute; inset: 0; border-radius: inherit;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.35rem; color: var(--gold-text); font-size: 0.75rem; font-weight: 600;
+  opacity: 0; transition: var(--transition-fast);
+}
+
+.goal-template-card.is-locked:hover .goal-template-locked { opacity: 1; }
+.goal-template-card.is-locked .goal-template-icon,
+.goal-template-card.is-locked .goal-template-title { filter: blur(2px); opacity: 0.6; }
+
+/* ---------- goal cards v2 ---------- */
+#goals-list.goals-grid-v2 {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.goal-card-v2 {
+  opacity: 0;
+  animation: goalCardIn 0.45s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
+@keyframes goalCardIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.goal-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.goal-card-icon {
+  width: 46px; height: 46px; border-radius: var(--radius-md);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.35rem;
+  background: color-mix(in srgb, var(--goal-c, var(--primary)) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--goal-c, var(--primary)) 35%, transparent);
+}
+
+.goal-card-title-wrap { min-width: 0; flex: 1; }
+.goal-card-title {
+  font-size: 1rem; font-weight: 700; color: var(--text-main);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ---------- deadline urgency chips ---------- */
+.goal-deadline-chip {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.55rem;
+  border-radius: 999px; margin-top: 0.3rem; white-space: nowrap;
+}
+.goal-deadline-chip.dl-ok      { background: var(--recess-2); color: var(--text-muted); }
+.goal-deadline-chip.dl-soon    { background: var(--gold-soft); color: var(--gold-text); }
+.goal-deadline-chip.dl-urgent  { background: rgba(248,113,113,0.14); color: #f87171; animation: goalUrgentPulse 1.8s ease-in-out infinite; }
+.goal-deadline-chip.dl-overdue { background: rgba(248,113,113,0.22); color: #f87171; animation: goalUrgentPulse 1.4s ease-in-out infinite; }
+.goal-deadline-chip.dl-done    { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+
+@keyframes goalUrgentPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* ---------- progress ring (numeric + milestone goals) ---------- */
+.goal-ring-wrap { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
+.goal-ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.goal-ring-track { fill: none; stroke: var(--recess-3); stroke-width: 8; }
+.goal-ring-fill {
+  fill: none; stroke: var(--goal-c, var(--primary)); stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.4,0,0.2,1);
+}
+.goal-ring-label {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 700; color: var(--text-main);
+}
+
+.goal-card-body { display: flex; align-items: center; gap: 1rem; margin-top: 0.9rem; }
+.goal-card-numbers { flex: 1; min-width: 0; }
+.goal-card-fraction { font-size: 1.15rem; color: var(--text-main); font-weight: 600; }
+.goal-card-fraction b { color: var(--goal-c, var(--primary)); font-weight: 800; font-size: 1.3rem; }
+
+/* ---------- quick progress stepper (replaces bare number input) ---------- */
+.goal-quickstep {
+  display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem;
+}
+.goal-quickstep-btn {
+  width: 40px; height: 40px; border-radius: var(--radius-md);
+  background: var(--recess-3); border: 1px solid var(--glass-border);
+  color: var(--text-main); cursor: pointer; transition: var(--transition-fast);
+  display: flex; align-items: center; justify-content: center; font-size: 1rem;
+  flex-shrink: 0;
+}
+.goal-quickstep-btn:hover:not(:disabled) { background: var(--goal-c, var(--primary)); color: #fff; border-color: transparent; }
+.goal-quickstep-btn:active:not(:disabled) { transform: scale(0.92); }
+.goal-quickstep-btn:disabled { opacity: 0.35; cursor: default; }
+.goal-quickstep-input {
+  width: 72px; height: 40px; text-align: center; background: var(--recess-3);
+  border: 1px solid var(--glass-border); color: var(--text-main);
+  border-radius: var(--radius-md); padding: 0.4rem 0.3rem; font-size: 1.05rem; font-weight: 700;
+}
+
+/* ---------- completion celebration burst ---------- */
+.goal-burst-particle {
+  position: absolute; top: 50%; left: 50%; width: 6px; height: 6px;
+  border-radius: 50%; pointer-events: none;
+  animation: goalBurstFly 0.7s ease-out forwards;
+}
+@keyframes goalBurstFly {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--gx)), calc(-50% + var(--gy))) scale(0); opacity: 0; }
+}
+
+.goal-card-v2.just-completed { animation: goalCompletePop 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes goalCompletePop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.035); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- quick-create modal (pill toggle + chips) ---------- */
+.goal-type-pills { display: flex; gap: 0.5rem; }
+.goal-type-pill {
+  flex: 1; text-align: center; padding: 0.65rem 0.5rem;
+  border-radius: var(--radius-md); border: 1px solid var(--glass-border);
+  background: var(--recess-3); color: var(--text-muted); cursor: pointer;
+  font-size: 0.85rem; font-weight: 600; transition: var(--transition-fast);
+}
+.goal-type-pill.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff; border-color: transparent;
+}
+
+.goal-icon-picker { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.goal-icon-option {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem; background: var(--recess-3);
+  border: 1px solid var(--glass-border); cursor: pointer; transition: var(--transition-fast);
+}
+.goal-icon-option.active { border-color: var(--primary); background: var(--primary-soft); transform: scale(1.08); }
+
+.goal-deadline-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.goal-deadline-chip-btn {
+  padding: 0.45rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+  background: var(--recess-3); border: 1px solid var(--glass-border);
+  color: var(--text-muted); cursor: pointer; transition: var(--transition-fast);
+}
+.goal-deadline-chip-btn.active {
+  background: var(--primary-soft); color: var(--primary); border-color: var(--primary);
+}
+
+.goal-more-details-toggle {
+  display: flex; align-items: center; gap: 0.4rem; cursor: pointer;
+  color: var(--text-muted); font-size: 0.85rem; font-weight: 500; margin: 0.25rem 0 1rem;
+  user-select: none;
+}
+.goal-more-details-toggle i { transition: var(--transition-fast); font-size: 0.75rem; }
+.goal-more-details-toggle.open i { transform: rotate(90deg); }
+.goal-more-details-panel {
+  max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+}
+.goal-more-details-panel.open { max-height: 320px; }
+
+/* ---------- Pro insights v2 additions ---------- */
+.goal-account-list-item {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.6rem; padding: 0.55rem 0; border-bottom: 1px solid var(--glass-border);
+  font-size: 0.82rem;
+}
+.goal-account-list-item:last-child { border-bottom: none; }
+.goal-account-list-item span:first-child { color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- deadline reminder popup (mirrors checklist reminder toast) ---------- */
+.goal-reminder-popup {
+  position: fixed; top: 1.25rem; right: 1.25rem; z-index: 400;
+  max-width: 340px; display: flex; gap: 0.85rem; align-items: flex-start;
+  background: var(--glass-surface); backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
+  padding: 1rem 1.1rem; box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+  transform: translateX(120%); opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease;
+}
+.goal-reminder-popup.show { transform: translateX(0); opacity: 1; }
+.goal-reminder-popup-icon {
+  width: 38px; height: 38px; border-radius: var(--radius-sm); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+}
+.goal-reminder-popup.soon .goal-reminder-popup-icon { background: var(--gold-soft); color: var(--gold-text); }
+.goal-reminder-popup.reached .goal-reminder-popup-icon { background: rgba(248,113,113,0.16); color: #f87171; }
+.goal-reminder-popup-title { font-size: 0.88rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.15rem; }
+.goal-reminder-popup-text { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+.goal-reminder-popup-close {
+  background: none; border: none; color: var(--text-dim); cursor: pointer;
+  font-size: 0.85rem; flex-shrink: 0; padding: 0.15rem;
+}
+.goal-reminder-popup-close:hover { color: var(--text-main); }
+
+@media (max-width: 599px) {
+  .goal-reminder-popup { left: 0.75rem; right: 0.75rem; max-width: none; }
+  .goal-template-card { flex-basis: 148px; }
+}
+/* ===== MOBILE BOTTOM NAV (spec §23) — Home | Today | Goals | Progress | More ===== */
+.mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 90;
+    background: rgba(8, 2, 2, 0.92);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--glass-border);
+    padding: 0.4rem 0.25rem calc(0.4rem + env(safe-area-inset-bottom));
+    justify-content: space-between;
+  }
+
+  .mobile-bottom-nav button.mbn-item {
+    background: none;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .mbn-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.35rem 0.1rem;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+  }
+
+  .mbn-item i { font-size: 1.05rem; }
+
+  .mbn-item.active,
+  .mbn-item:hover {
+    color: var(--primary);
+  }
+
+  /* keep page content clear of the fixed bar */
+  .main,
+  .checklist-main {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+
+  /* The floating burger button and the bottom nav's "More" button both
+     open the same sidebar — redundant once the bottom nav is showing.
+     Hide the burger here; it stays for tablet/desktop widths where the
+     bottom nav itself is hidden. */
+  .burger {
+    display: none;
   }
 }

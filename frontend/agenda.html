@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>document.documentElement.style.visibility = "hidden";</script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agenda | Etho</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="./images/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <style>
+      /* ============================================================
+         AGENDA PAGE — scoped styles. Reuses existing design tokens
+         and components (.dash-header-row, .template-library-*,
+         .custom-dialog-*) so nothing here touches the shared
+         stylesheet. Calendar classes mirror fitness.html's
+         .fit-cal-* Schedule tab so the two calendars feel like the
+         same component.
+         ============================================================ */
+
+      .agenda-cal-nav { display: flex; align-items: center; gap: 14px; margin-bottom: var(--space-lg); }
+      .agenda-cal-nav button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass-highlight); color: var(--text-muted); cursor: pointer; transition: var(--transition-fast); }
+      .agenda-cal-nav button:hover { color: var(--text-main); background: var(--lift-3); }
+      .agenda-cal-nav .label { font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
+      .agenda-cal-nav .today-btn { width: auto; border-radius: var(--radius-sm); padding: 0 12px; font-size: 0.75rem; font-weight: 600; }
+
+      .agenda-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+      .agenda-cal-weekday { text-align: center; font-size: 0.68rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; padding-bottom: 4px; }
+      .agenda-cal-cell { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); min-height: 76px; padding: 6px; cursor: pointer; transition: var(--transition-fast); display: flex; flex-direction: column; gap: 4px; }
+      .agenda-cal-cell:hover { border-color: var(--primary); transform: translateY(-1px); }
+      .agenda-cal-cell.pad { visibility: hidden; cursor: default; pointer-events: none; }
+      .agenda-cal-cell.is-today { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+      .agenda-cal-daynum { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); }
+      .agenda-cal-cell.is-today .agenda-cal-daynum { color: var(--primary); }
+      .agenda-cal-preview { font-size: 0.66rem; line-height: 1.3; color: var(--text-main); font-weight: 600; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+      .agenda-cal-cell.empty .agenda-cal-preview { color: var(--text-dim); font-style: italic; font-weight: 400; }
+      .agenda-cal-count { margin-top: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 0.62rem; font-weight: 700; color: var(--primary); }
+      .agenda-cal-count .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 6px var(--primary-glow); }
+      @media (max-width: 640px) { .agenda-cal-cell { min-height: 54px; } .agenda-cal-preview { display: none; } }
+
+      /* ---- Day detail overlay (reuses .template-library-overlay shell) ---- */
+      .agenda-day-summary { display: flex; gap: var(--space-md); margin-bottom: var(--space-lg); flex-wrap: wrap; }
+      .agenda-day-stat { background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 0.7rem 1.1rem; text-align: center; flex: 1; min-width: 120px; }
+      .agenda-day-stat .val { font-size: 1.3rem; font-weight: 800; color: var(--text-main); }
+      .agenda-day-stat .lbl { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+      .agenda-event-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--space-lg); }
+      .agenda-event { display: flex; align-items: center; gap: 0.7rem; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-left: 3px solid var(--event-color, var(--primary)); border-radius: var(--radius-md); padding: 0.65rem 0.9rem; cursor: pointer; transition: var(--transition-fast); }
+      .agenda-event:hover { background: var(--lift-3); transform: translateX(3px); box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+      .agenda-event .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--event-color, var(--primary)); flex-shrink: 0; box-shadow: 0 0 8px var(--event-color, var(--primary)); }
+      .agenda-event .title { font-size: 0.9rem; font-weight: 600; color: var(--text-main); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .agenda-event .time { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
+
+      .agenda-day-empty { text-align: center; padding: 2rem 1rem; color: var(--text-muted); font-size: 0.88rem; background: var(--glass-highlight); border: 1px dashed var(--glass-border); border-radius: var(--radius-lg); margin-bottom: var(--space-lg); }
+      .agenda-day-empty i { font-size: 1.5rem; color: var(--text-dim); margin-bottom: 0.5rem; display: block; }
+
+      /* ---- Add/edit event modal (extends .custom-dialog-*) ---- */
+      /* z-index bumped above .template-library-overlay (1000) since this
+         modal opens nested on top of the day-detail overlay. */
+      .agenda-modal { z-index: 1100; }
+      .agenda-modal .custom-dialog-box { text-align: left; max-width: 420px; }
+      .agenda-modal .custom-dialog-icon { text-align: center; }
+      .agenda-form-group { margin-bottom: var(--space-md); }
+      .agenda-form-group label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.4rem; }
+      .agenda-form-group input[type="text"], .agenda-form-group input[type="time"] { width: 100%; }
+      .agenda-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+      .agenda-color-row { display: flex; gap: 0.6rem; }
+      .agenda-color-swatch { width: 2rem; height: 2rem; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: var(--transition-fast); position: relative; }
+      .agenda-color-swatch:hover { transform: scale(1.1); }
+      .agenda-color-swatch.selected { border-color: var(--text-main); box-shadow: 0 0 0 3px var(--recess-1); }
+      .agenda-color-swatch.selected::after { content: '\f00c'; font-family: "Font Awesome 6 Free"; font-weight: 900; color: #fff; font-size: 0.7rem; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+      .agenda-modal-actions { display: flex; gap: var(--space-sm); justify-content: space-between; margin-top: var(--space-lg); }
+      .agenda-modal-actions .agenda-actions-right { display: flex; gap: var(--space-sm); }
+
+      input[type="time"] { background: var(--recess-3); border: 1px solid var(--glass-border); color: var(--text-main); padding: 0.7rem 1rem; border-radius: var(--radius-md); transition: var(--transition); font-size: 0.95rem; font-family: inherit; }
+      input[type="time"]:focus { border-color: var(--primary); background: var(--recess-4); box-shadow: 0 0 0 3px rgba(232, 0, 28, 0.18), 0 4px 12px rgba(0,0,0,0.3); transform: translateY(-1px); outline: none; }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+<div class="navbar-left">
+  <a href="home.html">
+    <img src="./images/etho_logo-removebg-preview.png" alt="Logo" class="logo">
+  </a>
+</div>
+        <div class="navbar-right">
+            <span class="account-pill" id="account-pill" title="Signed in"><i class="fa-solid fa-crown"></i></span>
+            <span class="username"><i class="fa-regular fa-circle-user"></i> Welcome, User</span>
+        </div>
+    </nav>
+<div class="sidebar-overlay" id="overlay"></div>
+   <aside class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <nav>
+      <ul>
+        <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="tracker.html"><i class="fa-solid fa-fire"></i> Tracker</a></li>
+        <li><a href="agenda.html" class="active"><i class="fa-solid fa-calendar-days"></i> Agenda</a></li>
+        <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+        <li><a href="consistency.html"><i class="fa-solid fa-calendar-check"></i> Consistency</a></li>
+        <li><a href="fitness.html"><i class="fa-solid fa-dumbbell"></i> Fitness</a></li>
+        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Library</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+        <li><a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+    <div class="burger" id="burger" tabindex="0" aria-label="Toggle menu">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+    <main class="main">
+        <header class="header dash-header-row" style="text-align:left; margin-bottom: var(--space-xl);">
+            <div>
+                <div class="dash-eyebrow"><i class="fa-solid fa-calendar-days"></i> Account feature</div>
+                <h1 style="margin-bottom:0.2rem;">Agenda</h1>
+                <h2 style="font-size:1.05rem; font-weight:400; color:var(--text-muted);">Pick a day to see what's planned.</h2>
+            </div>
+            <div class="dash-header-stat">
+                <i class="fa-solid fa-calendar-day"></i>
+                <div>
+                    <div class="dash-header-stat-value" id="agenda-today-count">0</div>
+                    <div class="dash-header-stat-label">events today</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="agenda-cal-wrap" data-account-feature data-account-label="Etho Agenda" data-account-copy="A full month calendar with day-by-day event planning, linked straight to your goals.">
+          <div class="agenda-cal-nav">
+            <button id="agenda-cal-prev" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+            <span class="label" id="agenda-cal-label">—</span>
+            <button id="agenda-cal-next" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+            <button class="today-btn" id="agenda-cal-today">Today</button>
+          </div>
+          <div class="agenda-calendar-grid" id="agenda-calendar-grid"></div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <p>Copyright &copy; 2026. Made with ❤️ by <a href="https://www.youtube.com/channel/UCQCIuukPO_pf-xuCOfHNweg" target="_blank">@Gmindset02</a>.</p>
+    </footer>
+
+    <!-- ===== Day detail overlay — shown when a calendar day is clicked ===== -->
+    <div class="template-library-overlay" id="agenda-day-overlay" hidden>
+      <div class="template-library-box" id="agenda-day-box">
+        <div class="template-library-header">
+          <div>
+            <h3 id="agenda-day-title"><i class="fa-solid fa-calendar-day"></i> —</h3>
+            <p class="template-library-sub" id="agenda-day-sub"></p>
+          </div>
+          <button class="template-library-close" id="agenda-day-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="overflow-y:auto;">
+          <div class="agenda-day-summary" id="agenda-day-summary"></div>
+          <div class="agenda-event-list" id="agenda-event-list"></div>
+          <button type="button" class="checklist-add-btn" id="agenda-add-btn" style="width:100%; justify-content:center;">
+            <i class="fa-solid fa-plus"></i><span>Add event</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Add / Edit event modal ===== -->
+    <div class="custom-dialog-overlay agenda-modal" id="agenda-modal" style="display:none;">
+      <div class="custom-dialog-box">
+        <div class="custom-dialog-icon"><i class="fa-solid fa-calendar-plus" id="agenda-modal-icon"></i></div>
+        <h3 id="agenda-modal-title" style="margin-bottom: var(--space-md); text-align:center;">New event</h3>
+
+        <div class="agenda-form-group">
+          <label for="agenda-event-title">Title</label>
+          <input type="text" id="agenda-event-title" placeholder="e.g. Client call" maxlength="80" />
+        </div>
+
+        <div class="agenda-form-row">
+          <div class="agenda-form-group">
+            <label for="agenda-event-time">Time</label>
+            <input type="time" id="agenda-event-time" value="09:00" />
+          </div>
+          <div class="agenda-form-group">
+            <label>Color</label>
+            <div class="agenda-color-row" id="agenda-color-row"></div>
+          </div>
+        </div>
+
+        <div class="agenda-form-group">
+          <label for="agenda-event-goal">Link to a goal <span style="color:var(--text-dim); font-weight:400;">(optional)</span></label>
+          <select id="agenda-event-goal" style="width:100%; background:var(--recess-3); border:1px solid var(--glass-border); color:var(--text-main); padding:0.65rem 0.9rem; border-radius:var(--radius-md); font-size:0.9rem;">
+            <option value="">None</option>
+          </select>
+        </div>
+
+        <div class="agenda-modal-actions">
+          <button type="button" class="custom-dialog-btn custom-dialog-danger" id="agenda-delete-btn" style="flex:none; display:none;">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+          <div class="agenda-actions-right" style="flex:1; display:flex; gap:0.75rem;">
+            <button type="button" class="custom-dialog-btn custom-dialog-cancel" id="agenda-cancel-btn">Cancel</button>
+            <button type="button" class="custom-dialog-btn custom-dialog-confirm" id="agenda-save-btn">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <script src="account-base.js"></script>
+    <script src="dialogs.js"></script>
+    <script src="cloud-sync.js"></script>
+    <script src="agenda.js"></script>
+
+
+  <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <a href="home.html" class="mbn-item"><i class="fa-solid fa-house"></i>Home</a>
+    <a href="checklist.html" class="mbn-item"><i class="fa-solid fa-list-check"></i>Today</a>
+    <a href="goals.html" class="mbn-item"><i class="fa-solid fa-bullseye"></i>Goals</a>
+    <a href="consistency.html" class="mbn-item"><i class="fa-solid fa-chart-line"></i>Progress</a>
+    <button type="button" class="mbn-item" id="mbn-more" aria-label="More"><i class="fa-solid fa-bars"></i>More</button>
+  </nav>
+  <script>
+    document.getElementById('mbn-more')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('overlay')?.classList.toggle('active');
+    });
+  </script>
+
+</body>
+</html>

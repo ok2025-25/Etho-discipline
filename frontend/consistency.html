@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>document.documentElement.style.visibility = "hidden";</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consistency Tracker | Etho Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="./images/favicon.ico">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    /* ===== Mode selector (top 2 squares) ===== */
+    .mode-selector {
+      display: flex;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .mode-btn {
+      flex: 1;
+      max-width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: var(--space-lg);
+      background: var(--glass-surface);
+      border: 2px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-muted);
+    }
+
+    .mode-btn i { font-size: 1.6rem; }
+
+    .mode-btn span {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .mode-btn:hover {
+      background: var(--glass-surface-hover);
+      transform: translateY(-2px);
+    }
+
+    .mode-btn.check-btn.active {
+      border-color: #22c55e;
+      color: #22c55e;
+      background: rgba(34, 197, 94, 0.1);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.25);
+    }
+
+    .mode-btn.cross-btn.active {
+      border-color: var(--primary);
+      color: var(--accent);
+      background: var(--primary-soft);
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    /* ===== Year selector ===== */
+    .tracker-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    .tracker-toolbar select#year-select {
+      background: var(--recess-3);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .tracker-legend {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .tracker-legend span { display: flex; align-items: center; gap: 6px; }
+
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .legend-swatch.check { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.6); }
+    .legend-swatch.cross { background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+    .legend-swatch.empty { background: var(--lift-3); border: 1px solid var(--glass-border); }
+
+    /* ===== Year grid ===== */
+    .year-grid-card {
+      padding: var(--space-xl);
+      /* .card sets overflow:hidden; the Path layout's connector curves
+         bulge slightly past the row edges, so this card needs to allow it */
+      overflow: visible;
+    }
+
+    .month-block { margin-bottom: var(--space-lg); }
+
+    /* Mobile-only "Show more" at the start and end of the Grid/Path
+       month list — when today is 3+ months into the year, the months
+       before/after the current one collapse behind a toggle instead of
+       forcing a huge scroll to find today. Never used for the Heatmap
+       layout (already a single compact strip). Same collapse idiom as
+       Tracker's Habit Insights / the Goals list toggle. */
+    .consistency-collapse-group.collapsed { display: none; }
+    .consistency-show-more-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      margin-bottom: var(--space-lg);
+      padding: 0.65rem;
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .consistency-show-more-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    @media (max-width: 599px) {
+      .consistency-show-more-btn { display: flex; }
+    }
+
+    .month-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 0.6rem;
+    }
+
+    .day-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(20px, 1fr));
+      gap: 5px;
+    }
+
+    .day-square {
+      aspect-ratio: 1 / 1;
+      border-radius: 5px;
+      background: var(--lift-2);
+      border: 1px solid var(--glass-border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      color: transparent;
+      transition: var(--transition-fast);
+      position: relative;
+    }
+
+    .day-square:hover {
+      transform: scale(1.15);
+      border-color: var(--primary);
+      z-index: 2;
+    }
+
+    .day-square.today { box-shadow: 0 0 0 2px var(--text-main) inset; }
+
+    .day-square.future { opacity: 0.45; cursor: not-allowed; }
+    .day-square.future:hover { transform: none; border-color: var(--glass-border); }
+
+    .day-square.check {
+      background: #22c55e;
+      border-color: #22c55e;
+      /* --text-main is dark on the light theme and white on the dark
+         theme, so the icon stays legible on the light-cream page
+         without losing the "white on saturated color" look in dark mode. */
+      color: var(--text-main);
+    }
+
+    .day-square.cross {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--text-main);
+    }
+
+    .day-square i { font-size: 0.6rem; pointer-events: none; }
+
+    /* ===== Stats row ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: var(--space-md);
+      background: var(--glass-highlight);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label { font-size: 0.78rem; color: var(--text-muted); margin-top: 5px; }
+
+    /* ===== Hero stat: Success Rate is the one number that answers "how
+       am I doing" at a glance, so it gets first position, a bigger ring,
+       and a one-line explainer instead of sitting equal-weight with the
+       other four cards. ===== */
+    .stat-hero-card {
+      grid-column: span 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg) var(--space-md);
+    }
+    .stat-hero-card .stat-ring {
+      width: 108px;
+      height: 108px;
+    }
+    .stats-grid.account .stat-hero-card .stat-ring {
+      width: 120px;
+      height: 120px;
+    }
+    .stat-hero-card .ring-value { font-size: 2rem; }
+    .stat-hero-card .stat-label { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
+    .stats-grid.account .stat-hero-card .ring-value { font-size: 2rem; }
+    .stat-hero-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+
+    /* ===== Icon badges: small always-on circle for every stat card, with
+       a richer glow/gradient version layered on top when signed in (below).
+       Free users get a real circular badge too — not just plain text. ===== */
+    .stat-icon-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 0.6rem;
+      border-radius: 50%;
+      font-size: 1rem;
+      color: var(--text-muted);
+      background: var(--lift-2);
+      border: 1px solid var(--glass-border);
+    }
+
+    .stats-grid.account .stat-card {
+      padding: var(--space-xl) var(--space-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stats-grid.account .stat-icon-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 0.7rem;
+      border-radius: 50%;
+      font-size: 1.25rem;
+      color: #fff;
+      transition: var(--transition);
+    }
+
+    .stats-grid.account .check-badge {
+      background: linear-gradient(135deg, var(--custom-check), color-mix(in srgb, var(--custom-check) 55%, black));
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--custom-check) 40%, transparent);
+    }
+    .stats-grid.account .cross-badge {
+      background: linear-gradient(135deg, var(--custom-cross), color-mix(in srgb, var(--custom-cross) 55%, black));
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--custom-cross) 40%, transparent);
+    }
+    .stats-grid.account .streak-badge {
+      background: linear-gradient(135deg, #fb923c, #ef4444);
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.25);
+    }
+
+    /* Etho Score: gold flagship treatment, distinct from the other
+       stat cards — this is the headline reason to sign in. */
+    .etho-score-stat-crown { display: none; }
+    .stats-grid.account .etho-score-badge {
+      background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+      box-shadow: 0 6px 16px var(--gold-glow);
+    }
+    .stats-grid.account #stat-card-etho-score .stat-value {
+      background: linear-gradient(135deg, var(--gold-text), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stats-grid.account .etho-score-stat-crown { display: inline; color: var(--gold); font-size: 0.65em; margin-right: 3px; }
+
+    /* Locked teaser for guests — deliberately not the generic
+       dim-and-grayscale lock look; stays saturated with a lock glyph
+       so it reads as an enticing sign-in nudge, not a disabled feature.
+       Written standalone (not relying on .stats-grid.account) since a
+       guest's grid never gets the "account" class. */
+    #stat-card-etho-score.account-locked { opacity: 1 !important; filter: none !important; }
+    #stat-card-etho-score.account-locked::after { content: none !important; }
+    #stat-card-etho-score.etho-score-teaser {
+      padding: var(--space-xl) var(--space-md);
+      position: relative;
+      overflow: hidden;
+    }
+    #stat-card-etho-score.etho-score-teaser .stat-icon-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 0.7rem;
+      border-radius: 50%;
+      font-size: 1.25rem;
+      color: #fff;
+      background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+      box-shadow: 0 6px 16px var(--gold-glow);
+    }
+    #stat-card-etho-score.etho-score-teaser .stat-value {
+      background: none;
+      -webkit-text-fill-color: var(--gold);
+      color: var(--gold);
+      animation: ethoScoreLockPulseStat 2.6s ease-in-out infinite;
+    }
+    #stat-card-etho-score.etho-score-teaser .stat-label {
+      color: var(--gold-text);
+      font-weight: 700;
+    }
+    @keyframes ethoScoreLockPulseStat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    /* Streak flame grows more intense the longer the streak runs */
+    .stats-grid.account .stat-streak-card[data-tier="0"] .streak-badge { opacity: 0.35; box-shadow: none; }
+    .stats-grid.account .stat-streak-card[data-tier="1"] .streak-badge { box-shadow: 0 0 14px rgba(239, 68, 68, 0.45); }
+    .stats-grid.account .stat-streak-card[data-tier="2"] .streak-badge {
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+      animation: flame-pulse 1.8s ease-in-out infinite;
+    }
+    .stats-grid.account .stat-streak-card[data-tier="3"] .streak-badge {
+      box-shadow: 0 0 28px rgba(239, 68, 68, 0.75);
+      animation: flame-pulse 1.1s ease-in-out infinite;
+      transform: scale(1.06);
+    }
+    @keyframes flame-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+    }
+    .stats-grid.account .stat-streak-card[data-tier="3"] { animation: flame-pulse 1.1s ease-in-out infinite; }
+
+    .stats-grid.account .stat-value { font-size: 1.6rem; }
+    .stats-grid.account .stat-label {
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      opacity: 0.75;
+    }
+
+    /* Success-rate donut ring, built from a masked conic-gradient so it
+       needs no SVG — JS drives the fill via the --rate custom property.
+       Visible for every user (not account-gated): this is the page's
+       headline "how am I doing" number, so it always renders as a real
+       ring, never bare text. Signing in adds a subtle glow on top. */
+    .stat-ring {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      width: 84px;
+      height: 84px;
+      margin: 0 auto 0.7rem;
+      border-radius: 50%;
+      --rate: 0;
+    }
+    .stat-ring::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(var(--custom-check) calc(var(--rate) * 1%), var(--lift-2) 0);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 9px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 9px));
+      transition: background 0.4s ease;
+    }
+    .ring-value {
+      position: relative;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      -webkit-text-fill-color: currentColor;
+    }
+    .stats-grid.account .stat-ring {
+      box-shadow: 0 0 20px color-mix(in srgb, var(--custom-check) 30%, transparent);
+    }
+    .stats-grid.account .ring-value { font-size: 1rem; font-weight: 700; }
+
+    /* ===== Custom theme overrides (JS sets these on :root when a signed-in
+       user picks an accent theme) — every check/cross color below reads
+       from these vars so the whole page reskins instantly. ===== */
+    :root {
+      --custom-check: #22c55e;
+      --custom-cross: var(--accent);
+    }
+
+    .mode-btn.check-btn.active {
+      border-color: var(--custom-check);
+      color: var(--custom-check);
+      background: color-mix(in srgb, var(--custom-check) 12%, transparent);
+      box-shadow: 0 0 20px color-mix(in srgb, var(--custom-check) 30%, transparent);
+    }
+
+    .mode-btn.cross-btn.active {
+      border-color: var(--custom-cross);
+      color: var(--custom-cross);
+      background: color-mix(in srgb, var(--custom-cross) 12%, transparent);
+      box-shadow: 0 0 20px color-mix(in srgb, var(--custom-cross) 30%, transparent);
+    }
+
+    .legend-swatch.check { background: var(--custom-check); box-shadow: 0 0 6px color-mix(in srgb, var(--custom-check) 60%, transparent); }
+    .legend-swatch.cross { background: var(--custom-cross); box-shadow: 0 0 6px color-mix(in srgb, var(--custom-cross) 60%, transparent); }
+
+    .day-square.check {
+      background: var(--custom-check);
+      border-color: var(--custom-check);
+      color: var(--text-main);
+    }
+
+    .day-square.cross {
+      background: var(--custom-cross);
+      border-color: var(--custom-cross);
+      color: var(--text-main);
+    }
+
+    .stat-value {
+      background: linear-gradient(135deg, var(--custom-check), var(--custom-cross));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* ===== Toolbar: customize entry point ===== */
+    .btn-customize {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.1rem;
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .btn-customize:hover { background: var(--glass-surface-hover); transform: translateY(-1px); }
+    .btn-customize i { color: var(--gold-text, var(--primary)); }
+
+    /* ===== Shape variants ===== */
+    #year-grid.shape-square .day-square,
+    #year-grid.shape-square .path-node { border-radius: 3px; }
+    #year-grid.shape-rounded .day-square,
+    #year-grid.shape-rounded .path-node { border-radius: 8px; }
+    #year-grid.shape-circle .day-square,
+    #year-grid.shape-circle .path-node { border-radius: 50%; }
+
+    /* ===== Density variants (grid layout) ===== */
+    #year-grid.density-compact .day-grid { grid-template-columns: repeat(auto-fill, minmax(14px, 1fr)); gap: 3px; }
+    #year-grid.density-cozy .day-grid { grid-template-columns: repeat(auto-fill, minmax(20px, 1fr)); gap: 5px; }
+    #year-grid.density-large .day-grid { grid-template-columns: repeat(auto-fill, minmax(28px, 1fr)); gap: 7px; }
+
+    #year-grid.density-compact .month-label { font-size: 0.68rem; }
+    #year-grid.density-large .month-label { font-size: 0.88rem; }
+
+    /* ===== Layout: snaking Path, connected into one smooth line =====
+       Each month is capped at 2-3 rows instead of one long vertical
+       column. Rows alternate reading direction (left->right, then
+       right->left, ...). Rather than drawing the row spine and the
+       connector as two disconnected straight bars, the geometry below
+       makes them genuinely meet: the connector's vertical bar is
+       extended (--path-reach) up/down into the neighboring rows, the
+       row's own spine is trimmed short on the connecting side, and a
+       quarter-circle "elbow" piece fills the gap between them — so the
+       whole month reads as one continuous rounded-corner path. Nodes
+       sit exactly on the line with an opaque background, fully hiding
+       whatever line passes behind them. */
+    #year-grid[data-layout="path"] {
+      --path-inset: 14px;   /* horizontal padding a row's spine stops short of */
+      --path-pad: 18px;     /* row's vertical padding */
+      --path-node: 46px;    /* node size, drives where the spine sits */
+      --path-elbow: 26px;   /* corner radius of each turn */
+      --path-half: calc(var(--path-pad) + (var(--path-node) / 2));
+      --path-reach: calc(var(--path-half) - var(--path-elbow));
+    }
+    #year-grid.density-compact[data-layout="path"] { --path-node: 34px; }
+    #year-grid.density-large[data-layout="path"] { --path-node: 58px; }
+
+    #year-grid[data-layout="path"] .month-block { margin-bottom: var(--space-xl); }
+
+    #year-grid[data-layout="path"] .day-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    #year-grid[data-layout="path"] .path-row {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      padding: var(--path-pad) var(--path-inset);
+    }
+    #year-grid[data-layout="path"] .path-row.reverse { flex-direction: row-reverse; }
+
+    /* Solid spine running the length of each row, sitting exactly at
+       node-center height so it's fully hidden behind every node. Trimmed
+       short on whichever side has a rounded corner leading into a
+       connector, so the elbow piece can fill that stretch instead. */
+    #year-grid[data-layout="path"] .path-row::before {
+      content: "";
+      position: absolute;
+      left: var(--path-inset);
+      right: var(--path-inset);
+      top: 50%;
+      height: 4px;
+      background: var(--glass-border);
+      transform: translateY(-50%);
+      z-index: 0;
+      border-radius: 3px;
+    }
+    #year-grid[data-layout="path"] .path-row.trim-right::before { right: calc(var(--path-inset) + var(--path-elbow)); }
+    #year-grid[data-layout="path"] .path-row.trim-left::before { left: calc(var(--path-inset) + var(--path-elbow)); }
+
+    /* Vertical segment joining one row to the next. Extended past its own
+       wrapper (top/bottom negative offset = --path-reach) up into the row
+       above and down into the row below, so it actually meets the elbow
+       piece in each row instead of stopping in the middle of empty space. */
+    #year-grid[data-layout="path"] .path-connector {
+      position: relative;
+      height: 20px;
+    }
+    #year-grid[data-layout="path"] .path-connector::before {
+      content: "";
+      position: absolute;
+      top: calc(-1 * var(--path-reach));
+      bottom: calc(-1 * var(--path-reach));
+      width: 4px;
+      background: var(--glass-border);
+      z-index: 0;
+      border-radius: 3px;
+    }
+    #year-grid[data-layout="path"] .path-connector.connector-right::before { right: var(--path-inset); }
+    #year-grid[data-layout="path"] .path-connector.connector-left::before { left: var(--path-inset); }
+
+    /* Quarter-circle elbow, sitting inside the row at the exact point
+       its spine was trimmed, curving that trimmed end into the vertical
+       connector — the actual "smooth corner" of the path. */
+    #year-grid[data-layout="path"] .path-elbow {
+      position: absolute;
+      width: var(--path-elbow);
+      height: var(--path-elbow);
+      border: 4px solid var(--glass-border);
+      box-sizing: border-box;
+      z-index: 0;
+    }
+    #year-grid[data-layout="path"] .path-elbow.right-down {
+      right: var(--path-inset); top: 50%;
+      border-left: none; border-bottom: none;
+      border-top-right-radius: var(--path-elbow);
+    }
+    #year-grid[data-layout="path"] .path-elbow.right-up {
+      right: var(--path-inset); bottom: 50%;
+      border-left: none; border-top: none;
+      border-bottom-right-radius: var(--path-elbow);
+    }
+    #year-grid[data-layout="path"] .path-elbow.left-down {
+      left: var(--path-inset); top: 50%;
+      border-right: none; border-bottom: none;
+      border-top-left-radius: var(--path-elbow);
+    }
+    #year-grid[data-layout="path"] .path-elbow.left-up {
+      left: var(--path-inset); bottom: 50%;
+      border-right: none; border-top: none;
+      border-bottom-left-radius: var(--path-elbow);
+    }
+
+    /* Small directional marker at the start of each row, echoing the
+       arrow markers on a route/path icon */
+    #year-grid[data-layout="path"] .path-arrow {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      color: var(--glass-border);
+      font-size: 0.85rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* flex-basis + aspect-ratio (instead of a fixed px size) lets nodes
+       shrink to fit any row width, so rows always span edge to edge with
+       no horizontal scrolling needed. No transform/offset here — nodes
+       sit exactly on the spine. background-color is opaque (unlike the
+       translucent --lift-2 used elsewhere) so the spine is fully hidden
+       behind every node instead of showing through it. */
+    #year-grid[data-layout="path"] .day-square {
+      flex: 0 1 var(--path-node);
+      aspect-ratio: 1;
+      min-width: 18px;
+      border-radius: 50%;
+      position: relative;
+      z-index: 1;
+      font-size: 0.8rem;
+      background-color: var(--surface-popup);
+    }
+
+    #year-grid.shape-square[data-layout="path"] .day-square { border-radius: 3px; }
+    #year-grid.shape-rounded[data-layout="path"] .day-square { border-radius: 8px; }
+
+    #year-grid[data-layout="path"] .day-square i { font-size: 0.75rem; }
+    #year-grid[data-layout="path"] .day-square.today { box-shadow: 0 0 0 2px var(--text-main) inset, 0 0 12px var(--custom-check); }
+
+    #year-grid[data-layout="path"] .day-square:hover { transform: scale(1.18); }
+
+    #year-grid.density-compact[data-layout="path"] .day-square { font-size: 0.66rem; }
+    #year-grid.density-compact[data-layout="path"] .day-square i { font-size: 0.6rem; }
+    #year-grid.density-large[data-layout="path"] .day-square { font-size: 0.95rem; }
+
+    /* ===== Layout: continuous Heatmap (GitHub-style) ===== */
+    #year-grid[data-layout="heatmap"] .heatmap-scroll {
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+
+    #year-grid[data-layout="heatmap"] .heatmap-months {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 6px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: max-content;
+    }
+
+    #year-grid[data-layout="heatmap"] .heatmap-body {
+      display: flex;
+      gap: 3px;
+      min-width: max-content;
+    }
+
+    #year-grid[data-layout="heatmap"] .heatmap-week {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    #year-grid[data-layout="heatmap"] .heatmap-body,
+    #year-grid[data-layout="heatmap"] .heatmap-week { gap: 2px; }
+
+    #year-grid[data-layout="heatmap"] .day-square {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      font-size: 0;
+    }
+    #year-grid[data-layout="heatmap"].density-large .day-square { width: 13px; height: 13px; }
+    #year-grid[data-layout="heatmap"].density-compact .day-square { width: 7px; height: 7px; }
+
+    #year-grid[data-layout="heatmap"] .heatmap-months span {
+      width: 10px !important;
+      font-size: 0.62rem;
+    }
+    #year-grid[data-layout="heatmap"] .day-square:hover { transform: scale(1.4); }
+    #year-grid[data-layout="heatmap"] .day-square i { display: none; }
+    #year-grid[data-layout="heatmap"] .day-square.pad { visibility: hidden; cursor: default; }
+
+    /* ===== Customize overlay/panel ===== */
+    .customize-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+    }
+    .customize-overlay.open { display: flex; }
+
+    .customize-panel {
+      background: var(--surface-popup);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--glass-shadow);
+      width: 100%;
+      max-width: 460px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: var(--space-xl);
+    }
+
+    .customize-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+    }
+    .customize-header h3 { font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .customize-close {
+      background: var(--lift-2);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .customize-section { margin-bottom: var(--space-lg); }
+    .customize-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.7rem;
+    }
+
+    .style-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-sm); }
+    .style-option {
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      padding: var(--space-sm);
+      background: var(--glass-highlight);
+      border: 2px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: var(--transition-fast);
+    }
+    .style-option:hover { background: var(--glass-surface-hover); }
+    .style-option.active { border-color: var(--primary); color: var(--text-main); background: var(--primary-soft); }
+
+    .style-preview { width: 100%; height: 34px; display: grid; place-items: center; }
+    .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; width: 34px; }
+    .preview-grid span { width: 100%; aspect-ratio: 1; background: var(--custom-check); border-radius: 2px; opacity: 0.8; }
+    .preview-path { font-size: 1.3rem; color: var(--custom-check); }
+    .preview-heatmap { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; width: 34px; }
+    .preview-heatmap span { width: 100%; aspect-ratio: 1; background: var(--custom-check); border-radius: 1px; opacity: 0.6; }
+    .preview-heatmap span:nth-child(3n) { opacity: 0.9; }
+
+    .theme-options { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .theme-swatch {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--glass-border);
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--sw-check) 50%, var(--sw-cross) 50%);
+      position: relative;
+    }
+    .theme-swatch.active { border-color: var(--text-main); box-shadow: 0 0 0 3px var(--primary-soft); }
+    .theme-swatch.active::after {
+      content: "\f00c";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 0.8rem;
+      text-shadow: 0 0 3px rgba(0,0,0,0.6);
+    }
+
+    .shape-options, .density-options { display: flex; gap: 0.6rem; }
+    .shape-option, .density-option {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+      padding: 0.6rem;
+      background: var(--glass-highlight);
+      border: 2px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .shape-option.active, .density-option.active { border-color: var(--primary); color: var(--text-main); background: var(--primary-soft); }
+    .shape-demo { width: 22px; height: 22px; background: var(--custom-check); }
+    .shape-demo.shape-rounded { border-radius: 6px; }
+    .shape-demo.shape-square { border-radius: 2px; }
+    .shape-demo.shape-circle { border-radius: 50%; }
+
+    .customize-footer { display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); margin-top: var(--space-md); }
+    .btn-reset-style {
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .btn-reset-style:hover { color: var(--text-main); border-color: var(--primary); }
+
+    .btn-save-style {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border: none;
+      color: #fff;
+      padding: 0.6rem 1.3rem;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .btn-save-style:hover { transform: translateY(-1px); box-shadow: 0 6px 18px var(--primary-glow); }
+    .btn-save-style.unsaved::after {
+      content: "";
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--gold-text, #fff);
+      display: inline-block;
+    }
+    .btn-save-style.saved-flash { animation: save-flash 0.5s ease; }
+    @keyframes save-flash {
+      0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+      100% { box-shadow: 0 0 0 14px rgba(34,197,94,0); }
+    }
+
+    /* ===== Back to top ===== */
+    .back-to-top {
+      position: fixed;
+      /* Stack directly above the sidebar burger toggle (fixed, 56px,
+         bottom/right: var(--space-xl), z-index 101) instead of overlapping it. */
+      right: var(--space-xl);
+      bottom: calc(var(--space-xl) + 56px + var(--space-sm));
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: var(--glass-shadow);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: var(--transition-fast);
+      z-index: 150;
+    }
+    .back-to-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .back-to-top:hover { background: var(--glass-surface-hover); color: var(--primary); transform: translateY(-2px); }
+
+    /* Keep back-to-top stacked above the burger at every breakpoint where
+       the burger's own size/offset changes (mirrors styles.css exactly). */
+    @media (max-width: 1023px) {
+      .back-to-top { right: var(--space-lg); bottom: calc(var(--space-lg) + 54px + var(--space-sm)); width: 42px; height: 42px; }
+    }
+    @media (max-width: 767px) {
+      .back-to-top { right: var(--space-md); bottom: calc(var(--space-md) + 52px + var(--space-sm)); width: 40px; height: 40px; }
+    }
+    @media (max-width: 599px) {
+      .back-to-top { right: var(--space-sm); bottom: calc(var(--space-sm) + 48px + var(--space-xs, 6px)); width: 38px; height: 38px; }
+    }
+    @media (max-width: 399px) {
+      .back-to-top { bottom: calc(var(--space-sm) + 44px + var(--space-xs, 6px)); width: 36px; height: 36px; }
+    }
+    @media (max-height: 400px) and (orientation: landscape) {
+      .back-to-top { right: var(--space-sm); bottom: calc(var(--space-sm) + 44px + var(--space-xs, 6px)); width: 34px; height: 34px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-left">
+      <a href="home.html">
+        <img src="./images/etho_logo-removebg-preview.png" alt="Logo" class="logo">
+      </a>
+    </div>
+    <div class="navbar-right">
+      <span class="account-pill" id="account-pill" title="Signed in"><i class="fa-solid fa-crown"></i></span>
+      <span class="username">
+        <i class="fa-regular fa-circle-user"></i> User
+      </span>
+    </div>
+  </nav>
+
+  <div class="sidebar-overlay" id="overlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <nav>
+      <ul>
+        <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="tracker.html"><i class="fa-solid fa-fire"></i> Tracker</a></li>
+        <li><a href="agenda.html"><i class="fa-solid fa-calendar-days"></i> Agenda</a></li>
+        <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+        <li><a href="consistency.html" class="active"><i class="fa-solid fa-calendar-check"></i> Consistency</a></li>
+        <li><a href="fitness.html"><i class="fa-solid fa-dumbbell"></i> Fitness</a></li>
+        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Library</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+        <li><a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="burger" id="sidebar-toggle">
+    <div></div><div></div><div></div>
+  </div>
+
+  <main class="main">
+    <header class="header dash-header-row" style="text-align:left; margin-bottom: var(--space-xl);">
+      <div>
+        <h1 style="margin-bottom:0.2rem;">Consistency Tracker</h1>
+        <h2 style="font-size:1.05rem; font-weight:400; color:var(--text-muted); margin:0;">365 days. Every single one counts.</h2>
+      </div>
+    </header>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card stat-hero-card stat-rate-card">
+        <div class="stat-ring" id="stat-ring">
+          <span class="ring-value" id="stat-success-rate">0%</span>
+        </div>
+        <div class="stat-label">Success Rate</div>
+        <div class="stat-hero-sub">Your consistency this year</div>
+      </div>
+      <div class="stat-card stat-streak-card" id="stat-card-streak" data-tier="0">
+        <div class="stat-icon-badge streak-badge"><i class="fa-solid fa-fire"></i></div>
+        <div class="stat-value" id="stat-streak">0</div>
+        <div class="stat-label">Current Streak</div>
+      </div>
+      <div class="stat-card stat-checks-card">
+        <div class="stat-icon-badge check-badge"><i class="fa-solid fa-check"></i></div>
+        <div class="stat-value" id="stat-checks">0</div>
+        <div class="stat-label">Days Succeeded</div>
+      </div>
+      <div class="stat-card stat-crosses-card">
+        <div class="stat-icon-badge cross-badge"><i class="fa-solid fa-xmark"></i></div>
+        <div class="stat-value" id="stat-crosses">0</div>
+        <div class="stat-label">Days Missed</div>
+      </div>
+      <div class="stat-card" id="stat-card-etho-score" data-account-feature data-account-label="Etho Score" data-account-copy="One live number blending your checklist, goals, fitness and habits into a single daily discipline score.">
+        <div class="stat-icon-badge etho-score-badge"><i class="fa-solid fa-gauge-high"></i></div>
+        <div class="stat-value" id="stat-etho-score">—</div>
+        <div class="stat-label"><i class="fa-solid fa-crown etho-score-stat-crown"></i> Etho Score</div>
+      </div>
+    </div>
+
+    <!-- Mode selector: the 2 squares to pick check / cross -->
+    <div class="mode-selector">
+      <button type="button" class="mode-btn check-btn active" id="mode-check-btn" aria-pressed="true">
+        <i class="fa-solid fa-check"></i>
+        <span>Success</span>
+      </button>
+      <button type="button" class="mode-btn cross-btn" id="mode-cross-btn" aria-pressed="false">
+        <i class="fa-solid fa-xmark"></i>
+        <span>Missed</span>
+      </button>
+    </div>
+
+    <div class="tracker-toolbar">
+      <select id="year-select"></select>
+
+      <button type="button" class="btn-customize" id="customize-btn" data-account-feature data-account-label="Consistency Customization" data-account-copy="Pick your layout — Grid, Path or Heatmap — plus accent themes and density.">
+        <i class="fa-solid fa-sliders"></i> Customize
+      </button>
+
+      <div class="tracker-legend">
+        <span><span class="legend-swatch check"></span> Success</span>
+        <span><span class="legend-swatch cross"></span> Missed</span>
+        <span><span class="legend-swatch empty"></span> Not logged</span>
+      </div>
+    </div>
+
+    <!-- Year grid -->
+    <section class="card year-grid-card">
+      <div id="year-grid"></div>
+    </section>
+
+    <!-- Customize panel (account) -->
+    <div class="customize-overlay" id="customize-overlay">
+      <div class="customize-panel">
+        <div class="customize-header">
+          <h3><i class="fa-solid fa-sliders"></i> Customize Your Tracker</h3>
+          <button type="button" class="customize-close" id="customize-close" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="customize-section">
+          <label class="customize-label">Layout Style</label>
+          <div class="style-options" id="style-options">
+            <button type="button" class="style-option" data-style="grid">
+              <div class="style-preview preview-grid"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <span>Grid</span>
+            </button>
+            <button type="button" class="style-option" data-style="path">
+              <div class="style-preview preview-path"><i class="fa-solid fa-route"></i></div>
+              <span>Path</span>
+            </button>
+            <button type="button" class="style-option" data-style="heatmap">
+              <div class="style-preview preview-heatmap"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <span>Heatmap</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="customize-section">
+          <label class="customize-label">Accent Theme</label>
+          <div class="theme-options" id="theme-options">
+            <button type="button" class="theme-swatch" data-theme="signature" style="--sw-check:#22c55e; --sw-cross:#FF4444;" title="Signature"></button>
+            <button type="button" class="theme-swatch" data-theme="ocean" style="--sw-check:#38bdf8; --sw-cross:#fb7185;" title="Ocean"></button>
+            <button type="button" class="theme-swatch" data-theme="sunset" style="--sw-check:#fbbf24; --sw-cross:#f43f5e;" title="Sunset"></button>
+            <button type="button" class="theme-swatch" data-theme="forest" style="--sw-check:#34d399; --sw-cross:#fb923c;" title="Forest"></button>
+            <button type="button" class="theme-swatch" data-theme="mono" style="--sw-check:#fafaf9; --sw-cross:#78716c;" title="Mono"></button>
+          </div>
+        </div>
+
+        <div class="customize-section">
+          <label class="customize-label">Square Shape</label>
+          <div class="shape-options" id="shape-options">
+            <button type="button" class="shape-option" data-shape="rounded"><div class="shape-demo shape-rounded"></div>Rounded</button>
+            <button type="button" class="shape-option" data-shape="square"><div class="shape-demo shape-square"></div>Square</button>
+            <button type="button" class="shape-option" data-shape="circle"><div class="shape-demo shape-circle"></div>Circle</button>
+          </div>
+        </div>
+
+        <div class="customize-section">
+          <label class="customize-label">Density</label>
+          <div class="density-options" id="density-options">
+            <button type="button" class="density-option" data-density="compact">Compact</button>
+            <button type="button" class="density-option" data-density="cozy">Cozy</button>
+            <button type="button" class="density-option" data-density="large">Large</button>
+          </div>
+        </div>
+
+        <div class="customize-footer">
+          <button type="button" class="btn-reset-style" id="reset-style-btn">Reset to Default</button>
+          <button type="button" class="btn-save-style" id="save-style-btn">
+            <i class="fa-solid fa-check"></i> Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="back-to-top" id="back-to-top" aria-label="Back to top">
+      <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <section class="quote-rotator" id="quote-rotator" aria-live="polite">
+      <blockquote id="quote-text"></blockquote>
+      <cite id="quote-author"></cite>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Copyright &copy; 2026. Made with ❤️ by <a href="https://www.youtube.com/channel/UCQCIuukPO_pf-xuCOfHNweg" target="_blank">@Gmindset02</a>.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="account-base.js"></script>
+  <script src="cloud-sync.js"></script>
+  <script src="dialogs.js"></script>
+  <script src="etho-score.js"></script>
+  <script src="consistency.js"></script>
+
+  <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <a href="home.html" class="mbn-item"><i class="fa-solid fa-house"></i>Home</a>
+    <a href="checklist.html" class="mbn-item"><i class="fa-solid fa-list-check"></i>Today</a>
+    <a href="goals.html" class="mbn-item"><i class="fa-solid fa-bullseye"></i>Goals</a>
+    <a href="consistency.html" class="mbn-item active"><i class="fa-solid fa-chart-line"></i>Progress</a>
+    <button type="button" class="mbn-item" id="mbn-more" aria-label="More"><i class="fa-solid fa-bars"></i>More</button>
+  </nav>
+  <script>
+    document.getElementById('mbn-more')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('overlay')?.classList.toggle('active');
+    });
+  </script>
+
+</body>
+</html>

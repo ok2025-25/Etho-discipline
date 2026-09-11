@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>document.documentElement.style.visibility = "hidden";</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings | Etho Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="./images/favicon.ico">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    /* ===== Layout ===== */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-xl);
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .settings-grid { grid-template-columns: 1fr; }
+    }
+    .settings-card {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+    }
+    .settings-card h3 {
+      font-size: 1rem;
+      color: var(--text-main);
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .settings-card h3 i { color: var(--primary); }
+    .settings-card-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: var(--space-lg);
+    }
+    .settings-field { margin-bottom: var(--space-md); }
+    .settings-field:last-child { margin-bottom: 0; }
+    .settings-field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.45rem;
+    }
+    .settings-field input[type="text"],
+    .settings-field input[type="password"] { width: 100%; }
+    .settings-field-static {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      padding: 0.6rem 0;
+    }
+
+    .settings-input-wrap { position: relative; }
+    .settings-input-wrap input { width: 100%; padding-right: 2.6rem; }
+    .settings-toggle-visibility {
+      position: absolute;
+      right: 0.6rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.3rem;
+    }
+    .settings-toggle-visibility:hover { color: var(--text-main); }
+
+    .settings-save-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+    .settings-msg {
+      font-size: 0.8rem;
+      color: #2fa860;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .settings-msg.show { opacity: 1; }
+    .settings-msg.error { color: var(--accent); }
+
+    .settings-link-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0;
+      margin-top: var(--space-sm);
+      font-family: inherit;
+    }
+    .settings-link-btn:hover { color: var(--primary); }
+
+    /* ===== Row layout for toggle-style settings ===== */
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .settings-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .settings-row:first-child { padding-top: 0; }
+    .settings-row-label { font-size: 0.9rem; color: var(--text-main); font-weight: 600; }
+    .settings-row-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+    /* ===== iOS-style switch ===== */
+    .settings-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+      border-radius: 999px;
+      background: var(--lift-3);
+      border: 1px solid var(--glass-border);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    .settings-switch::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--surface-popup);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      transition: var(--transition-fast);
+    }
+    .settings-switch.on {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-color: transparent;
+    }
+    .settings-switch.on::after { left: 22px; }
+
+    /* ===== Theme picker ===== */
+    .theme-picker { display: flex; gap: var(--space-md); }
+    .theme-option {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+      background: var(--glass-highlight);
+      cursor: pointer;
+      transition: var(--transition-fast);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .theme-option i { font-size: 1.3rem; }
+    .theme-option:hover { transform: translateY(-2px); border-color: var(--primary); }
+    .theme-option.active {
+      border-color: var(--primary);
+      color: var(--text-main);
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+    .theme-option.active i { color: var(--primary); }
+
+    /* ===== Volume row (indented under its parent toggle) ===== */
+    .settings-subrow {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.6rem 0 0.85rem;
+      margin-left: 0;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    .settings-subrow input[type="range"] { flex: 1; accent-color: var(--primary); }
+    .settings-subrow.disabled { opacity: 0.4; pointer-events: none; }
+
+    .settings-logout-btn {
+      width: 100%;
+      justify-content: center;
+      color: #ef4444;
+      border-color: rgba(239,68,68,0.2);
+    }
+    .settings-signin-btn { width: 100%; justify-content: center; }
+
+    .settings-guest-note {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: var(--glass-highlight);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .settings-guest-note i { color: var(--gold); }
+
+    /* Guest vs account visibility, mirrors profile.html's pattern */
+    .plan-guest-only { display: block; }
+    .plan-account-only { display: none; }
+    [data-plan="account"] .plan-guest-only { display: none; }
+    [data-plan="account"] .plan-account-only { display: block; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-left">
+      <a href="home.html">
+          <img src="./images/etho_logo-removebg-preview.png" alt="Logo" class="logo">
+        </a>
+    </div>
+    <div class="navbar-right">
+      <span class="account-pill" id="account-pill" title="Signed in"><i class="fa-solid fa-crown"></i></span>
+      <span class="username">
+        <i class="fa-regular fa-circle-user"></i> User
+      </span>
+    </div>
+  </nav>
+
+  <div class="sidebar-overlay" id="overlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <nav>
+      <ul>
+        <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="tracker.html"><i class="fa-solid fa-fire"></i> Tracker</a></li>
+        <li><a href="agenda.html"><i class="fa-solid fa-calendar-days"></i> Agenda</a></li>
+        <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+        <li><a href="consistency.html"><i class="fa-solid fa-calendar-check"></i> Consistency</a></li>
+        <li><a href="fitness.html"><i class="fa-solid fa-dumbbell"></i> Fitness</a></li>
+        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Library</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+        <li><a href="settings.html" class="active"><i class="fa-solid fa-gear"></i> Settings</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="burger" id="sidebar-toggle">
+    <div></div><div></div><div></div>
+  </div>
+
+  <main class="main">
+    <header class="header">
+      <h1>Settings</h1>
+      <p>Manage your account, appearance and reminders.</p>
+    </header>
+
+    <div class="settings-grid">
+
+      <!-- ===== Left column ===== -->
+      <div style="display:flex; flex-direction:column; gap:var(--space-xl);">
+
+        <!-- Account -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-user-gear"></i> Account</h3>
+          <div class="settings-card-sub">Your sign-in details.</div>
+
+          <div class="plan-account-only">
+            <div class="settings-field">
+              <label>Email</label>
+              <div class="settings-field-static" id="settings-email">—</div>
+            </div>
+            <div class="settings-field">
+              <label>Display name</label>
+              <div class="settings-field-static" id="settings-name">—</div>
+            </div>
+            <a href="profile.html" class="checklist-history-btn" style="display:inline-flex; margin-top:0.25rem;">
+              <i class="fa-solid fa-pen"></i> Edit profile
+            </a>
+          </div>
+
+          <div class="plan-guest-only">
+            <div class="settings-guest-note">
+              <i class="fa-solid fa-crown"></i>
+              <span>You're browsing as a guest. Sign in to sync your data across devices and manage your account.</span>
+            </div>
+            <a href="login.html" class="checklist-add-btn settings-signin-btn" style="display:flex; margin-top:var(--space-md);">
+              <i class="fa-solid fa-right-to-bracket"></i> Sign in
+            </a>
+          </div>
+        </div>
+
+        <!-- Security / password -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-lock"></i> Security</h3>
+          <div class="settings-card-sub">Update the password for your account.</div>
+
+          <div class="plan-account-only">
+            <div class="settings-field">
+              <label for="new-password">New password</label>
+              <div class="settings-input-wrap">
+                <input type="password" id="new-password" placeholder="Min. 6 characters" autocomplete="new-password">
+                <button type="button" class="settings-toggle-visibility" data-target="new-password" aria-label="Show password">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div class="settings-field">
+              <label for="confirm-password">Confirm new password</label>
+              <div class="settings-input-wrap">
+                <input type="password" id="confirm-password" placeholder="••••••••" autocomplete="new-password">
+              </div>
+            </div>
+            <div class="settings-save-row">
+              <button class="checklist-add-btn" id="update-password-btn">
+                <i class="fa-solid fa-floppy-disk"></i> Update password
+              </button>
+              <span class="settings-msg" id="password-msg"></span>
+            </div>
+            <button type="button" class="settings-link-btn" id="email-reset-link">
+              Or email me a reset link instead
+            </button>
+          </div>
+
+          <div class="plan-guest-only">
+            <div class="settings-guest-note">
+              <i class="fa-solid fa-crown"></i>
+              <span>Sign in to set or change a password.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===== Right column ===== -->
+      <div style="display:flex; flex-direction:column; gap:var(--space-xl);">
+
+        <!-- Appearance -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-palette"></i> Appearance</h3>
+          <div class="settings-card-sub">Available on every plan — pick the theme that's easiest on your eyes.</div>
+          <div class="theme-picker">
+            <div class="theme-option" id="theme-option-light" data-theme-value="light">
+              <i class="fa-solid fa-sun"></i> Light
+            </div>
+            <div class="theme-option" id="theme-option-dark" data-theme-value="dark">
+              <i class="fa-solid fa-moon"></i> Dark
+            </div>
+          </div>
+        </div>
+
+        <!-- Reminders / notifications -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-bell"></i> Reminders</h3>
+          <div class="settings-card-sub">Control the alerts Etho sends you.</div>
+
+          <div data-account-feature data-account-label="Task Reminders" data-account-copy="Task-time alarms with adjustable volume that keep ringing until you actually show up.">
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">Checklist task reminders</div>
+                <div class="settings-row-desc">Alarm at each task's scheduled time.</div>
+              </div>
+              <div class="settings-switch" id="checklist-reminders-switch" role="switch" aria-checked="false" tabindex="0"></div>
+            </div>
+            <div class="settings-subrow" id="checklist-volume-row">
+              <i class="fa-solid fa-volume-low"></i>
+              <input type="range" id="checklist-volume-slider" min="0" max="1" step="0.05" aria-label="Reminder volume">
+              <i class="fa-solid fa-volume-high"></i>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Goal deadline reminders</div>
+              <div class="settings-row-desc">A heads-up as a goal's deadline approaches or passes.</div>
+            </div>
+            <div class="settings-switch" id="goal-reminders-switch" role="switch" aria-checked="true" tabindex="0"></div>
+          </div>
+        </div>
+
+        <!-- Session -->
+        <div class="settings-card">
+          <h3><i class="fa-solid fa-arrow-right-from-bracket"></i> Session</h3>
+          <div class="plan-account-only">
+            <div class="settings-card-sub">Sign out of Etho on this device.</div>
+            <button class="checklist-history-btn settings-logout-btn" id="logout-btn">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+            </button>
+          </div>
+          <div class="plan-guest-only">
+            <div class="settings-card-sub">You're not signed in on this device.</div>
+            <a href="login.html" class="checklist-add-btn settings-signin-btn" style="display:flex;">
+              <i class="fa-solid fa-right-to-bracket"></i> Sign in
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <section class="quote-rotator" id="quote-rotator" aria-live="polite">
+      <blockquote id="quote-text"></blockquote>
+      <cite id="quote-author"></cite>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Copyright &copy; 2026. Made with ❤️ by <a href="https://www.youtube.com/channel/UCQCIuukPO_pf-xuCOfHNweg" target="_blank">@Gmindset02</a>.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="account-base.js"></script>
+  <script src="cloud-sync.js"></script>
+
+  <script>
+    // ========== SETTINGS PAGE LOGIC ==========
+    document.addEventListener("DOMContentLoaded", async () => {
+      const user = await requireAuth(); // reveals the page, sets navbar/theme/locks — null for guests, which is fine here
+      const signedIn = !!user;
+
+      if (signedIn) {
+        document.getElementById("settings-email").textContent = user.email;
+        document.getElementById("settings-name").textContent =
+          user.user_metadata?.full_name || user.email.split("@")[0];
+      }
+
+      setupThemePicker();
+      setupPasswordForm(signedIn ? user : null);
+      setupReminders();
+      setupLogout(signedIn);
+      setupSidebarBurger();
+    });
+
+    // ---------- Appearance ----------
+    function setupThemePicker() {
+      const lightBtn = document.getElementById("theme-option-light");
+      const darkBtn = document.getElementById("theme-option-dark");
+
+      function reflectActive() {
+        const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+        lightBtn.classList.toggle("active", !isDark);
+        darkBtn.classList.toggle("active", isDark);
+      }
+      reflectActive();
+
+      function pick(theme) {
+        setThemeAttribute(theme);
+        cloudSet(THEME_KEY, theme);
+        reflectActive();
+        // keep the navbar's own sun/moon icon in sync without a reload
+        const navToggle = document.querySelector(".navbar-theme-toggle i");
+        if (navToggle) navToggle.className = `fa-solid ${theme === "light" ? "fa-sun" : "fa-moon"}`;
+      }
+
+      lightBtn.addEventListener("click", () => pick("light"));
+      darkBtn.addEventListener("click", () => pick("dark"));
+    }
+
+    // ---------- Security ----------
+    function setupPasswordForm(user) {
+      if (!user) return; // guest — nothing wired up, the locked note is already shown
+
+      document.querySelectorAll(".settings-toggle-visibility").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const input = document.getElementById(btn.dataset.target);
+          const icon = btn.querySelector("i");
+          const isHidden = input.type === "password";
+          input.type = isHidden ? "text" : "password";
+          icon.classList.toggle("fa-eye", !isHidden);
+          icon.classList.toggle("fa-eye-slash", isHidden);
+        });
+      });
+
+      const btn = document.getElementById("update-password-btn");
+      const msg = document.getElementById("password-msg");
+
+      function showMsg(text, isError) {
+        msg.textContent = text;
+        msg.className = "settings-msg show" + (isError ? " error" : "");
+        setTimeout(() => msg.classList.remove("show"), 3000);
+      }
+
+      btn.addEventListener("click", async () => {
+        const pass = document.getElementById("new-password").value;
+        const confirm = document.getElementById("confirm-password").value;
+
+        if (pass.length < 6) return showMsg("Password must be at least 6 characters.", true);
+        if (pass !== confirm) return showMsg("Passwords don't match.", true);
+
+        btn.disabled = true;
+        try {
+          const { error } = await supabaseClient.auth.updateUser({ password: pass });
+          if (error) throw error;
+          document.getElementById("new-password").value = "";
+          document.getElementById("confirm-password").value = "";
+          showMsg("Password updated!", false);
+        } catch (err) {
+          showMsg(err.message || "Couldn't update password.", true);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById("email-reset-link").addEventListener("click", async () => {
+        try {
+          await sendPasswordReset(user.email);
+          showMsg(`Reset link sent to ${user.email}.`, false);
+        } catch (err) {
+          showMsg(err.message || "Couldn't send reset link.", true);
+        }
+      });
+    }
+
+    // ---------- Reminders ----------
+    async function setupReminders() {
+      const CHECKLIST_PREF_KEY = "checklistRemindersEnabled";
+      const CHECKLIST_VOLUME_KEY = "checklistRemindersVolume";
+      const GOAL_PREF_KEY = "goalRemindersEnabled";
+
+      // Checklist reminders (account-only — locked automatically for
+      // guests by applyAccountLocks(), called inside requireAuth()).
+      const checklistSwitch = document.getElementById("checklist-reminders-switch");
+      const volumeRow = document.getElementById("checklist-volume-row");
+      const volumeSlider = document.getElementById("checklist-volume-slider");
+
+      let checklistEnabled = await cloudGet(CHECKLIST_PREF_KEY, false);
+      let volume = await cloudGet(CHECKLIST_VOLUME_KEY, 0.7);
+      volumeSlider.value = volume;
+
+      function reflectChecklist() {
+        checklistSwitch.classList.toggle("on", checklistEnabled);
+        checklistSwitch.setAttribute("aria-checked", String(checklistEnabled));
+        volumeRow.classList.toggle("disabled", !checklistEnabled);
+      }
+      reflectChecklist();
+
+      async function toggleChecklistReminders() {
+        // Guests never reach here — applyAccountLocks() intercepts the
+        // click on the wrapping [data-account-feature] element first.
+        if ("Notification" in window && !checklistEnabled && Notification.permission === "default") {
+          await Notification.requestPermission();
+        }
+        checklistEnabled = !checklistEnabled;
+        cloudSet(CHECKLIST_PREF_KEY, checklistEnabled);
+        reflectChecklist();
+      }
+      checklistSwitch.addEventListener("click", toggleChecklistReminders);
+      checklistSwitch.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleChecklistReminders(); }
+      });
+
+      volumeSlider.addEventListener("change", () => {
+        volume = Number(volumeSlider.value);
+        cloudSet(CHECKLIST_VOLUME_KEY, volume);
+      });
+
+      // Goal deadline reminders (every plan).
+      const goalSwitch = document.getElementById("goal-reminders-switch");
+      let goalEnabled = await cloudGet(GOAL_PREF_KEY, true);
+
+      function reflectGoal() {
+        goalSwitch.classList.toggle("on", goalEnabled);
+        goalSwitch.setAttribute("aria-checked", String(goalEnabled));
+      }
+      reflectGoal();
+
+      function toggleGoalReminders() {
+        goalEnabled = !goalEnabled;
+        cloudSet(GOAL_PREF_KEY, goalEnabled);
+        reflectGoal();
+      }
+      goalSwitch.addEventListener("click", toggleGoalReminders);
+      goalSwitch.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleGoalReminders(); }
+      });
+    }
+
+    // ---------- Session ----------
+    function setupLogout(signedIn) {
+      if (!signedIn) return;
+      document.getElementById("logout-btn").addEventListener("click", () => {
+        signOutUser();
+      });
+    }
+
+    // ---------- Sidebar (mobile) ----------
+    function setupSidebarBurger() {
+      const burger = document.getElementById("sidebar-toggle");
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      if (!burger || !sidebar) return;
+
+      burger.addEventListener("click", () => {
+        burger.classList.toggle("active");
+        sidebar.classList.toggle("open");
+        overlay?.classList.toggle("active", sidebar.classList.contains("open"));
+      });
+
+      overlay?.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        burger.classList.remove("active");
+        overlay.classList.remove("active");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!sidebar.contains(e.target) && !burger.contains(e.target) && !e.target.closest(".mobile-bottom-nav")) {
+          sidebar.classList.remove("open");
+          burger.classList.remove("active");
+          overlay?.classList.remove("active");
+        }
+      });
+    }
+  </script>
+
+  <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <a href="home.html" class="mbn-item"><i class="fa-solid fa-house"></i>Home</a>
+    <a href="checklist.html" class="mbn-item"><i class="fa-solid fa-list-check"></i>Today</a>
+    <a href="goals.html" class="mbn-item"><i class="fa-solid fa-bullseye"></i>Goals</a>
+    <a href="consistency.html" class="mbn-item"><i class="fa-solid fa-chart-line"></i>Progress</a>
+    <button type="button" class="mbn-item" id="mbn-more" aria-label="More"><i class="fa-solid fa-bars"></i>More</button>
+  </nav>
+  <script>
+    document.getElementById('mbn-more')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('overlay')?.classList.toggle('active');
+    });
+  </script>
+
+</body>
+</html>

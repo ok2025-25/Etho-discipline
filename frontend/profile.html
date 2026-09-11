@@ -1,118 +1,702 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile | Etho Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
-    <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>document.documentElement.style.visibility = "hidden";</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile | Etho Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="./images/favicon.ico">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-xl);
+    }
+
+    .profile-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+
+    .profile-header-info h2 {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 1.3rem;
+      color: var(--text-main);
+      margin-bottom: 0.2rem;
+    }
+
+    /* Same gold .account-pill used in the navbar next to the username,
+       just sized to sit inline with the profile header's larger
+       name text — kept immediately before the name, same as
+       everywhere else in the app. */
+    .profile-name-pill {
+      width: 20px;
+      height: 20px;
+      margin-right: 0;
+      flex-shrink: 0;
+    }
+    .profile-name-pill i { font-size: 0.62rem; }
+
+    .profile-header-info p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: var(--space-xl);
+      align-items: start;
+    }
+
+    /* Groups Account Settings + Plan & Billing into a single grid
+       item so they stack in the left column together — without this,
+       grid auto-placement puts "Your Stats" as a 3rd item back in the
+       narrow left column (row 2) instead of its own wide column,
+       squeezing the whole analytics grid into form-field width. */
+    .profile-col-left {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xl);
+    }
+
+    @media (max-width: 900px) {
+      .profile-grid { grid-template-columns: 1fr; }
+    }
+
+    .profile-card {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+    }
+
+    .profile-card h3 {
+      font-size: 1rem;
+      color: var(--text-main);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .profile-card h3 i { color: var(--primary); }
+
+    .profile-field { margin-bottom: var(--space-md); }
+
+    .profile-field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.45rem;
+    }
+
+    .profile-field input[type="text"] { width: 100%; }
+
+    .profile-field-static {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      padding: 0.6rem 0;
+    }
+
+    .profile-plan-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      background: var(--lift-1);
+      color: var(--text-muted);
+      border: 1px solid var(--glass-border);
+      margin-top: 0.4rem;
+    }
+
+    [data-plan="account"] .profile-plan-chip {
+      background: var(--gold-soft);
+      color: var(--gold-text);
+      border-color: var(--gold-glow);
+    }
+
+    [data-plan="account"] .profile-plan-chip i { color: var(--gold); }
+
+    .profile-save-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin-top: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    .profile-save-msg {
+      font-size: 0.8rem;
+      color: #86e6a8;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .profile-save-msg.show { opacity: 1; }
+    .profile-save-msg.error { color: var(--accent); }
+
+    .profile-logout-btn {
+      width: 100%;
+      justify-content: center;
+      margin-top: var(--space-lg);
+      color: #ef4444;
+      border-color: rgba(239,68,68,0.2);
+    }
+
+    /* ===== Guest vs account stats toggle =====
+       Both versions render in the DOM; only one shows, switched by
+       [data-plan] on <html> (set in auth.js/account-base.js once isSignedIn()
+       resolves). Body stays visibility:hidden until that's set, so
+       there's no flash of the wrong version. */
+    .plan-guest-only { display: block; }
+    .plan-account-only { display: none; }
+    [data-plan="account"] .plan-guest-only { display: none; }
+    [data-plan="account"] .plan-account-only { display: block; }
+
+    /* ===== Free plan: original stats design ===== */
+    .legacy-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .legacy-stat-card {
+      text-align: center;
+      padding: var(--space-md);
+      background: var(--glass-highlight);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+    }
+
+    .legacy-stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .legacy-stat-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .legacy-module-block { margin-bottom: var(--space-xl); }
+    .legacy-module-block:last-child { margin-bottom: 0; }
+
+    .legacy-module-block-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: var(--space-md);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legacy-module-block-title i { color: var(--primary); }
+
+    /* ===== Account stats: visual tile grid ===== */
+    .account-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .account-stat-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: var(--space-md);
+      background: var(--glass-highlight);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+      transition: var(--transition-fast);
+    }
+
+    .account-stat-card:hover {
+      border-color: rgba(232, 0, 28, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .account-stat-card-top {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.55rem;
+    }
+
+    .account-stat-icon {
+      width: 1.8rem;
+      height: 1.8rem;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      color: var(--primary);
+      font-size: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .account-stat-chip {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-dim);
+    }
+
+    .account-stat-count-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.3rem;
+      margin: 0.15rem 0;
+    }
+
+    .account-stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--text-main), var(--primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .account-stat-unit {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .account-stat-ring {
+      --pct: 0;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: conic-gradient(var(--primary) calc(var(--pct) * 1%), var(--lift-2) 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin: 0.1rem 0;
+    }
+
+    .account-stat-ring::before {
+      content: "";
+      position: absolute;
+      inset: 5px;
+      border-radius: 50%;
+      background: var(--surface-popup);
+    }
+
+    .account-stat-ring span {
+      position: relative;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .account-stat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+  </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-left">
-            <a href="home.html">
-                <img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Etho Logo" class="logo">
-            </a>
-        </div>
-        <div class="navbar-right">
-            <span class="username" id="navbar-username">
-                <i class="fa-regular fa-circle-user"></i> User
-            </span>
-        </div>
+
+  <nav class="navbar">
+    <div class="navbar-left">
+      <a href="home.html">
+          <img src="./images/etho_logo-removebg-preview.png" alt="Logo" class="logo">
+        </a>
+    </div>
+    <div class="navbar-right">
+      <span class="account-pill" id="account-pill" title="Signed in"><i class="fa-solid fa-crown"></i></span>
+      <span class="username">
+        <i class="fa-regular fa-circle-user"></i> User
+      </span>
+    </div>
+  </nav>
+
+  <div class="sidebar-overlay" id="overlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <nav>
+      <ul>
+        <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="tracker.html"><i class="fa-solid fa-fire"></i> Tracker</a></li>
+        <li><a href="agenda.html"><i class="fa-solid fa-calendar-days"></i> Agenda</a></li>
+        <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+        <li><a href="consistency.html"><i class="fa-solid fa-calendar-check"></i> Consistency</a></li>
+        <li><a href="fitness.html"><i class="fa-solid fa-dumbbell"></i> Fitness</a></li>
+        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Library</a></li>
+        <li><a href="profile.html" class="active"><i class="fa-solid fa-user"></i> Profile</a></li>
+        <li><a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
+      </ul>
     </nav>
+  </aside>
 
-    <aside class="sidebar" id="sidebar">
-        <h2>Menu</h2>
-        <nav>
-            <ul>
-                <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
-                <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
-                <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
-                <li><a href="tracker.html"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
-                <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
-                <li><a href="profile.html" class="active"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
-                <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
-            </ul>
-        </nav>
-    </aside>
+  <div class="burger" id="sidebar-toggle">
+    <div></div><div></div><div></div>
+  </div>
 
-    <div class="burger" id="sidebar-toggle">
-        <div></div><div></div><div></div>
+  <main class="main">
+    <header class="header">
+      <h1>Your Profile</h1>
+      <p>Your account and progress, at a glance.</p>
+    </header>
+
+    <div class="profile-header">
+      <div class="profile-avatar-wrap" style="position:relative; flex-shrink:0;">
+        <div class="profile-avatar" id="profile-avatar">U</div>
+        <label for="avatar-input" class="avatar-upload-btn"
+               style="position:absolute; bottom:-2px; right:-2px; width:26px; height:26px;
+                      border-radius:50%; background:var(--primary); color:#fff;
+                      display:flex; align-items:center; justify-content:center;
+                      cursor:pointer; border:2px solid var(--glass-surface); font-size:0.7rem;">
+          <i class="fa-solid fa-camera"></i>
+        </label>
+        <input type="file" id="avatar-input" accept="image/png,image/jpeg,image/webp" hidden>
+      </div>
+      <div class="profile-header-info">
+        <h2>
+          <span class="account-pill profile-name-pill" id="profile-name-pill" title="Signed in"><i class="fa-solid fa-circle-check"></i></span>
+          <span id="profile-display-name">Loading…</span>
+        </h2>
+        <p id="profile-email">—</p>
+        <span class="profile-plan-chip"><i class="fa-solid fa-circle-check"></i> <span id="profile-plan-label">Guest</span></span>
+      </div>
     </div>
 
-    <main class="main">
-        <header class="header">
-            <h1><i class="fa-solid fa-user-circle" style="color: var(--primary);"></i> My Profile</h1>
-            <p>Manage your account settings and preferences</p>
-        </header>
+    <div class="profile-grid">
 
-        <div id="message" class="message"></div>
+      <div class="profile-col-left">
 
-        <section class="card" style="max-width: 600px; margin: 0 auto;">
-            <!-- Avatar Section -->
-            <div style="text-align: center; margin-bottom: var(--space-2xl);">
-                <div style="position: relative; display: inline-block;">
-                    <img id="profile-avatar" src="https://ui-avatars.com/api/?name=User&size=120&background=8b5cf6&color=fff" 
-                         alt="Profile Avatar" 
-                         style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--primary); box-shadow: 0 0 20px var(--primary-glow);">
-                    <label for="avatar-upload" style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-                        <i class="fa-solid fa-camera"></i>
-                    </label>
-                    <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
-                </div>
-                <p style="margin-top: var(--space-md); color: var(--text-muted); font-size: 0.85rem;">Click camera icon to upload new avatar</p>
+        <!-- ===== Account settings ===== -->
+        <div class="profile-card">
+          <h3><i class="fa-solid fa-gear"></i> Account Settings</h3>
+
+          <div class="profile-field">
+            <label for="profile-name-input">Display name</label>
+            <input type="text" id="profile-name-input" placeholder="Your name">
+          </div>
+
+          <div class="profile-field">
+            <label>Email</label>
+            <div class="profile-field-static" id="profile-email-static">—</div>
+          </div>
+
+          <div class="profile-save-row">
+            <button class="checklist-add-btn" id="save-name-btn">
+              <i class="fa-solid fa-floppy-disk"></i> Save Changes
+            </button>
+            <span class="profile-save-msg" id="save-msg">Saved!</span>
+          </div>
+
+          <button class="checklist-history-btn profile-logout-btn" id="logout-btn">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ===== Stats ===== -->
+      <div class="profile-card">
+        <h3><i class="fa-solid fa-chart-simple"></i> Your Stats</h3>
+
+        <!-- Free plan: original simple stats -->
+        <div class="plan-guest-only">
+
+          <div class="legacy-module-block">
+            <div class="legacy-module-block-title"><i class="fa-solid fa-fire"></i> Momentum Tracker</div>
+            <div class="legacy-stats-grid">
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-streak">0</div>
+                <div class="legacy-stat-label">Day Streak</div>
+              </div>
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-today-pct">0%</div>
+                <div class="legacy-stat-label">Today's Habits</div>
+              </div>
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-total-checkins">0</div>
+                <div class="legacy-stat-label">Total Check-ins</div>
+              </div>
             </div>
+          </div>
 
-            <!-- Profile Form -->
-            <form id="profile-form">
-                <div style="margin-bottom: var(--space-lg);">
-                    <label style="display: block; margin-bottom: var(--space-sm); color: var(--text-muted); font-weight: 600;">
-                        <i class="fa-solid fa-user"></i> Username
-                    </label>
-                    <input type="text" id="username" required minlength="3" maxlength="20" 
-                           style="width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border); color: var(--text-main); padding: 0.75rem 1rem; border-radius: var(--radius-md);">
-                </div>
-
-                <div style="margin-bottom: var(--space-lg);">
-                    <label style="display: block; margin-bottom: var(--space-sm); color: var(--text-muted); font-weight: 600;">
-                        <i class="fa-solid fa-envelope"></i> Email
-                    </label>
-                    <input type="email" id="email" disabled 
-                           style="width: 100%; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); color: var(--text-dim); padding: 0.75rem 1rem; border-radius: var(--radius-md); cursor: not-allowed;">
-                    <small style="color: var(--text-dim); font-size: 0.8rem; display: block; margin-top: 0.25rem;">Email cannot be changed</small>
-                </div>
-
-                <div style="display: flex; gap: var(--space-md); margin-top: var(--space-xl);">
-                    <button type="submit" class="checklist-add-btn" style="flex: 1;">
-                        <i class="fa-solid fa-save"></i> Save Changes
-                    </button>
-                    <button type="button" id="logout-btn" class="checklist-action-btn" style="flex: 1; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 600; border-radius: var(--radius-md);">
-                        <i class="fa-solid fa-right-from-bracket"></i> Logout
-                    </button>
-                </div>
-            </form>
-
-            <!-- Danger Zone -->
-            <div style="margin-top: var(--space-3xl); padding-top: var(--space-xl); border-top: 1px solid var(--glass-border);">
-                <h3 style="color: #ef4444; margin-bottom: var(--space-md); font-size: 1rem;">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
-                </h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--space-md);">
-                    Deleting your account is permanent and cannot be undone.
-                </p>
-                <button id="delete-account-btn" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 0.6rem 1.2rem; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); font-size: 0.85rem;">
-                    <i class="fa-solid fa-trash"></i> Delete Account
-                </button>
+          <div class="legacy-module-block">
+            <div class="legacy-module-block-title"><i class="fa-solid fa-list-check"></i> Checklist</div>
+            <div class="legacy-stats-grid">
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-checklist-today">0%</div>
+                <div class="legacy-stat-label">Today's Progress</div>
+              </div>
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-checklist-done">0</div>
+                <div class="legacy-stat-label">Tasks Completed</div>
+              </div>
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-checklist-lists">0</div>
+                <div class="legacy-stat-label">Lists Completed</div>
+              </div>
             </div>
-        </section>
-    </main>
+          </div>
 
-    <footer class="footer">
-        <p>&copy; 2025 Etho Dashboard. Crafted with Focus.</p>
-    </footer>
+          <div class="legacy-module-block">
+            <div class="legacy-module-block-title"><i class="fa-solid fa-bullseye"></i> Goals</div>
+            <div class="legacy-stats-grid">
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-goals-total">0</div>
+                <div class="legacy-stat-label">Total Goals</div>
+              </div>
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-goals-done">0</div>
+                <div class="legacy-stat-label">Completed</div>
+              </div>
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-goals-pct">0%</div>
+                <div class="legacy-stat-label">Overall Progress</div>
+              </div>
+            </div>
+          </div>
 
-    <script src="profile.js"></script>
+          <div class="legacy-module-block">
+            <div class="legacy-module-block-title"><i class="fa-solid fa-graduation-cap"></i> Learning</div>
+            <div class="legacy-stats-grid">
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-notes-count">0</div>
+                <div class="legacy-stat-label">Notes Saved</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="legacy-module-block">
+            <div class="legacy-module-block-title"><i class="fa-solid fa-calendar-check"></i> Consistency</div>
+            <div class="legacy-stats-grid">
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-consistency-streak">0</div>
+                <div class="legacy-stat-label">Current Streak</div>
+              </div>
+              <div class="legacy-stat-card">
+                <div class="legacy-stat-value" id="stat-consistency-rate">0%</div>
+                <div class="legacy-stat-label">Success Rate (This Year)</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Account stats: visual tile grid -->
+        <div class="plan-account-only" data-account-feature data-account-label="Account Stats" data-account-copy="Sign in to see your stats across every part of Etho.">
+
+        <div class="account-stats-grid">
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-fire"></i></div>
+              <span class="account-stat-chip">Tracker</span>
+            </div>
+            <div class="account-stat-count-row">
+              <span class="account-stat-value" id="account-stat-streak">0</span>
+              <span class="account-stat-unit">days</span>
+            </div>
+            <div class="account-stat-label">Day Streak</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-bolt"></i></div>
+              <span class="account-stat-chip">Tracker</span>
+            </div>
+            <div class="account-stat-ring" id="ring-today-pct"><span id="account-stat-today-pct">0%</span></div>
+            <div class="account-stat-label">Today's Habits</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-check-double"></i></div>
+              <span class="account-stat-chip">Tracker</span>
+            </div>
+            <div class="account-stat-count-row">
+              <span class="account-stat-value" id="account-stat-total-checkins">0</span>
+              <span class="account-stat-unit">total</span>
+            </div>
+            <div class="account-stat-label">Check-ins</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-list-check"></i></div>
+              <span class="account-stat-chip">Checklist</span>
+            </div>
+            <div class="account-stat-ring" id="ring-checklist-today"><span id="account-stat-checklist-today">0%</span></div>
+            <div class="account-stat-label">Today's Progress</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-square-check"></i></div>
+              <span class="account-stat-chip">Checklist</span>
+            </div>
+            <div class="account-stat-count-row">
+              <span class="account-stat-value" id="account-stat-checklist-done">0</span>
+              <span class="account-stat-unit">tasks</span>
+            </div>
+            <div class="account-stat-label">Completed</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+              <span class="account-stat-chip">Checklist</span>
+            </div>
+            <div class="account-stat-count-row">
+              <span class="account-stat-value" id="account-stat-checklist-lists">0</span>
+              <span class="account-stat-unit">lists</span>
+            </div>
+            <div class="account-stat-label">Fully Cleared</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-bullseye"></i></div>
+              <span class="account-stat-chip">Goals</span>
+            </div>
+            <div class="account-stat-count-row">
+              <span class="account-stat-value" id="account-stat-goals-total">0</span>
+              <span class="account-stat-unit">set</span>
+            </div>
+            <div class="account-stat-label">Total Goals</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-trophy"></i></div>
+              <span class="account-stat-chip">Goals</span>
+            </div>
+            <div class="account-stat-count-row">
+              <span class="account-stat-value" id="account-stat-goals-done">0</span>
+              <span class="account-stat-unit">done</span>
+            </div>
+            <div class="account-stat-label">Completed</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-chart-pie"></i></div>
+              <span class="account-stat-chip">Goals</span>
+            </div>
+            <div class="account-stat-ring" id="ring-goals-pct"><span id="account-stat-goals-pct">0%</span></div>
+            <div class="account-stat-label">Progress</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+              <span class="account-stat-chip">Learning</span>
+            </div>
+            <div class="account-stat-count-row">
+              <span class="account-stat-value" id="account-stat-notes-count">0</span>
+              <span class="account-stat-unit">notes</span>
+            </div>
+            <div class="account-stat-label">Saved</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+              <span class="account-stat-chip">Consistency</span>
+            </div>
+            <div class="account-stat-count-row">
+              <span class="account-stat-value" id="account-stat-consistency-streak">0</span>
+              <span class="account-stat-unit">days</span>
+            </div>
+            <div class="account-stat-label">Current Streak</div>
+          </div>
+
+          <div class="account-stat-card">
+            <div class="account-stat-card-top">
+              <div class="account-stat-icon"><i class="fa-solid fa-percent"></i></div>
+              <span class="account-stat-chip">Consistency</span>
+            </div>
+            <div class="account-stat-ring" id="ring-consistency-rate"><span id="account-stat-consistency-rate">0%</span></div>
+            <div class="account-stat-label">Success Rate</div>
+          </div>
+
+        </div>
+        </div>
+      </div>
+
+    </div>
+
+    <section class="quote-rotator" id="quote-rotator" aria-live="polite">
+      <blockquote id="quote-text"></blockquote>
+      <cite id="quote-author"></cite>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Copyright &copy; 2026. Made with ❤️ by <a href="https://www.youtube.com/channel/UCQCIuukPO_pf-xuCOfHNweg" target="_blank">@Gmindset02</a>.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="auth.js"></script>
+  <script src="account-base.js"></script>
+  <script src="cloud-sync.js"></script>
+  <script src="profile.js"></script>
+
+  <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <a href="home.html" class="mbn-item"><i class="fa-solid fa-house"></i>Home</a>
+    <a href="checklist.html" class="mbn-item"><i class="fa-solid fa-list-check"></i>Today</a>
+    <a href="goals.html" class="mbn-item"><i class="fa-solid fa-bullseye"></i>Goals</a>
+    <a href="consistency.html" class="mbn-item"><i class="fa-solid fa-chart-line"></i>Progress</a>
+    <button type="button" class="mbn-item" id="mbn-more" aria-label="More"><i class="fa-solid fa-bars"></i>More</button>
+  </nav>
+  <script>
+    document.getElementById('mbn-more')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('overlay')?.classList.toggle('active');
+    });
+  </script>
+
 </body>
 </html>

@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>document.documentElement.style.visibility = "hidden";</script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fitness — Etho</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="./images/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <style>
+        /* ============================================================
+           FITNESS PAGE — scoped styles. Reuses existing design tokens
+           and components (.dash-card, .checklist-progress-bar-*,
+           .template-library-*, .checklist-action-btn, .btn-primary,
+           .template-btn) so nothing here touches the shared stylesheet.
+           ============================================================ */
+
+        input[type="number"], input[type="date"], textarea {
+            background: var(--recess-3); border: 1px solid var(--glass-border); color: var(--text-main);
+            padding: 0.7rem 1rem; border-radius: var(--radius-md); transition: var(--transition);
+            font-size: 0.95rem; font-family: inherit; width: 100%;
+        }
+        input[type="number"]:focus, input[type="date"]:focus, textarea:focus {
+            border-color: var(--primary); background: var(--recess-4);
+            box-shadow: 0 0 0 3px rgba(232, 0, 28, 0.18), 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateY(-1px); outline: none;
+        }
+        select { width: 100%; }
+        textarea { resize: vertical; min-height: 70px; }
+
+        .fit-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--space-md); }
+        .fit-field label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+        .fit-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+        @media (max-width: 520px) { .fit-field-row { grid-template-columns: 1fr; } }
+
+        /* ---- Tabs ---- */
+        .fit-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: var(--space-xl); border-bottom: 1px solid var(--glass-border); }
+        .fit-tab { flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px; padding: 0.65rem 1.1rem; border-radius: var(--radius-md) var(--radius-md) 0 0; background: transparent; border: none; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: var(--transition-fast); position: relative; }
+        .fit-tab i { font-size: 0.85rem; }
+        .fit-tab:hover { color: var(--text-main); background: var(--glass-highlight); }
+        .fit-tab.active { color: var(--text-main); }
+        .fit-tab.active::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: linear-gradient(90deg, var(--primary), var(--secondary)); }
+        .fit-panel[hidden] { display: none; }
+        .fit-panel { animation: fadeInUp 0.4s var(--bounce); }
+
+        .fit-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-lg); }
+        .fit-toolbar h2 { font-size: 1.15rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .fit-toolbar h2 i { color: var(--primary); }
+        .fit-toolbar-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+        /* "Your routine" — collapsible on mobile only (same pattern as
+           Tracker's Habit Insights toggle), since 7 day cards is a lot of
+           scroll on a phone; desktop always shows it in full. */
+        .fit-routine-toggle {
+            display: none;
+            background: var(--glass-highlight);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            flex-shrink: 0;
+        }
+        .fit-routine-toggle:hover { border-color: var(--primary); color: var(--text-main); }
+        .fit-routine-chevron { transition: transform 0.2s ease; }
+        .fit-routine-toggle.collapsed .fit-routine-chevron { transform: rotate(-90deg); }
+        .fit-routine-body { overflow: hidden; max-height: 4000px; transition: max-height 0.3s ease, opacity 0.25s ease; }
+        @media (max-width: 599px) {
+            .fit-routine-toggle { display: flex; }
+            .fit-routine-body.collapsed { max-height: 0; opacity: 0; }
+        }
+        .fit-btn-secondary { background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-main); padding: 0.65rem 1.2rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.88rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: var(--transition-fast); }
+
+        /* Exercise library grid — collapsible on BOTH mobile and desktop
+           (unlike the mobile-only toggles elsewhere on this page), since
+           the full exercise list can run long on any screen size. */
+        .fit-ex-grid-wrap { max-height: 4000px; overflow: hidden; transition: max-height 0.3s ease; }
+        .fit-ex-grid-wrap.collapsed { max-height: 480px; }
+        .fit-ex-show-more-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            margin-top: var(--space-md);
+            padding: 0.65rem;
+            background: var(--glass-highlight);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .fit-ex-show-more-btn.show { display: flex; }
+        .fit-ex-show-more-btn:hover { border-color: var(--primary); color: var(--text-main); }
+        .fit-ex-show-more-btn .fit-ex-chevron { transition: transform 0.2s ease; }
+        .fit-ex-show-more-btn.expanded .fit-ex-chevron { transform: rotate(180deg); }
+        .fit-btn-secondary:hover { background: var(--lift-2); border-color: var(--primary); transform: translateY(-1px); }
+        .fit-btn-secondary:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+        .fit-empty { text-align: center; padding: 2.5rem 1rem; color: var(--text-muted); font-size: 0.9rem; background: var(--glass-highlight); border: 1px dashed var(--glass-border); border-radius: var(--radius-lg); }
+        .fit-empty i { font-size: 1.6rem; color: var(--text-dim); margin-bottom: 0.6rem; display: block; }
+
+        /* ---- Dashboard: today card ---- */
+        .fit-today-card { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-xl); box-shadow: var(--glass-shadow); margin-bottom: var(--space-xl); }
+        .fit-today-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); flex-wrap: wrap; }
+        .fit-today-eyebrow { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+        .fit-today-name { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin: 0.3rem 0 0.6rem; }
+        .fit-today-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-muted); margin-bottom: var(--space-md); }
+        .fit-today-meta span { display: inline-flex; align-items: center; gap: 6px; }
+        .fit-today-meta i { color: var(--text-dim); }
+        .fit-today-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+
+        .fit-checkin-banner { display: none; align-items: flex-start; gap: 10px; background: var(--gold-soft); border: 1px solid var(--gold-glow); color: var(--gold-text); padding: 0.8rem 1rem; border-radius: var(--radius-md); font-size: 0.85rem; margin-top: var(--space-md); }
+        .fit-checkin-banner.show { display: flex; }
+        .fit-checkin-banner i { margin-top: 2px; }
+        .fit-checkin-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+        .fit-checkin-actions button { background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-main); padding: 5px 12px; border-radius: var(--radius-sm); font-size: 0.78rem; cursor: pointer; font-family: inherit; transition: var(--transition-fast); }
+        .fit-checkin-actions button:hover { background: var(--lift-3); }
+
+        /* ---- Dashboard: stat strip ---- */
+        .fit-stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); margin-bottom: var(--space-xl); }
+        @media (max-width: 700px) { .fit-stat-strip { grid-template-columns: repeat(2, 1fr); } }
+        .fit-stat-tile { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 1rem; text-align: center; }
+        .fit-stat-tile .val { font-size: 1.5rem; font-weight: 800; color: var(--text-main); line-height: 1.1; }
+        .fit-stat-tile .lbl { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+        .fit-stat-tile i { color: var(--primary); font-size: 0.85rem; margin-bottom: 4px; display: block; }
+
+        /* ---- Cards (goals / plans) ---- */
+        .fit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: var(--space-md); }
+        .fit-goal-card, .fit-plan-card { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-lg); transition: var(--transition-fast); }
+        .fit-goal-card:hover, .fit-plan-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--glass-shadow); }
+        .fit-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .fit-card-top h3 { font-size: 1rem; color: var(--text-main); margin-bottom: 2px; }
+        .fit-card-cat { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+        .fit-card-controls { display: flex; gap: 8px; flex-shrink: 0; }
+        .fit-progress-row { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); margin: 0.7rem 0 4px; }
+        .fit-progress-row b { color: var(--text-main); }
+        .fit-card-foot { margin-top: 0.7rem; font-size: 0.78rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 10px; }
+        .fit-card-foot span { display: inline-flex; align-items: center; gap: 5px; }
+        .fit-active-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #7fd996; background: rgba(90,180,110,0.15); padding: 3px 9px; border-radius: 999px; }
+
+        .fit-week-strip { display: flex; gap: 4px; margin-top: 0.8rem; }
+        .fit-week-strip .d { flex: 1; text-align: center; font-size: 0.62rem; font-weight: 700; color: var(--text-dim); background: var(--recess-2); border-radius: 6px; padding: 5px 2px; text-transform: uppercase; }
+        .fit-week-strip .d.workout { background: var(--primary-soft); color: var(--primary); }
+
+        /* ---- Exercise library ---- */
+        .fit-ex-toolbar { display: flex; gap: 10px; margin-bottom: var(--space-lg); flex-wrap: wrap; }
+        .fit-ex-toolbar input[type="text"] { flex: 2; min-width: 180px; }
+        .fit-ex-toolbar select { flex: 1; min-width: 140px; }
+        .fit-ex-card { cursor: pointer; }
+        .fit-ex-card .template-lib-name { font-weight: 700; }
+        .fit-ex-card .template-lib-person { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        /* ---- Difficulty filter — segmented toggle buttons, replacing the
+           old plain "Beginner · 5 exercises" text as the only way to tell
+           templates apart. Used in the template chooser (Insert from a
+           template) so every template can be filtered by level, not just
+           labeled. ---- */
+        .fit-difficulty-filter { display: flex; gap: 6px; flex-wrap: wrap; margin: 0.9rem 0 0.3rem; }
+        .fit-diff-btn {
+            background: var(--glass-highlight);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 0.4rem 0.95rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .fit-diff-btn:hover { border-color: var(--primary); color: var(--text-main); }
+        .fit-diff-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: transparent;
+            color: #fff;
+        }
+        .template-lib-diff-tag {
+            background: var(--recess-2);
+            border-radius: 5px;
+            padding: 1px 6px;
+            font-size: 0.78rem;
+        }
+        .fit-ex-tag { background: var(--recess-2); border-radius: 5px; padding: 1px 6px; }
+
+        /* ---- Calendar (Schedule tab) ---- */
+        .fit-cal-nav { display: flex; align-items: center; gap: 14px; margin-bottom: var(--space-lg); }
+        .fit-cal-nav button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass-highlight); color: var(--text-muted); cursor: pointer; transition: var(--transition-fast); }
+        .fit-cal-nav button:hover { color: var(--text-main); background: var(--lift-3); }
+        .fit-cal-nav .label { font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
+        .fit-cal-nav .today-btn { width: auto; border-radius: var(--radius-sm); padding: 0 12px; font-size: 0.75rem; font-weight: 600; }
+        .fit-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .fit-cal-weekday { text-align: center; font-size: 0.68rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; padding-bottom: 4px; }
+        .fit-cal-cell { background: var(--glass-surface); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); min-height: 76px; padding: 6px; cursor: pointer; transition: var(--transition-fast); display: flex; flex-direction: column; gap: 4px; }
+        .fit-cal-cell:hover { border-color: var(--primary); transform: translateY(-1px); }
+        .fit-cal-cell.pad { visibility: hidden; cursor: default; pointer-events: none; }
+        .fit-cal-cell.is-today { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+        .fit-cal-daynum { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); }
+        .fit-cal-cell.is-today .fit-cal-daynum { color: var(--primary); }
+        .fit-cal-wname { font-size: 0.68rem; line-height: 1.25; color: var(--text-main); font-weight: 600; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .fit-cal-cell.rest .fit-cal-wname { color: var(--text-dim); font-style: italic; font-weight: 400; }
+        .fit-cal-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: auto; }
+        .fit-cal-cell.completed { background: rgba(90,180,110,0.08); } .fit-cal-cell.completed .fit-cal-dot { background: #7fd996; }
+        .fit-cal-cell.missed { background: var(--primary-soft); } .fit-cal-cell.missed .fit-cal-dot { background: var(--primary); }
+        .fit-cal-cell.skipped .fit-cal-dot { background: var(--text-dim); }
+        .fit-cal-cell.scheduled .fit-cal-dot { background: var(--gold); }
+        .fit-cal-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: var(--space-lg); font-size: 0.75rem; color: var(--text-muted); }
+        .fit-cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .fit-cal-legend .dot { width: 8px; height: 8px; border-radius: 50%; }
+        @media (max-width: 640px) { .fit-cal-cell { min-height: 54px; } .fit-cal-wname { display: none; } }
+
+        /* ---- History ---- */
+        .fit-history-row { display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md); border-bottom: 1px solid var(--glass-border); cursor: pointer; transition: var(--transition-fast); border-radius: var(--radius-sm); }
+        .fit-history-row:hover { background: var(--lift-1); transform: translateX(3px); }
+        .fit-history-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--glass-highlight); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0; }
+        .fit-history-main { flex: 1; min-width: 0; }
+        .fit-history-main .name { font-weight: 700; color: var(--text-main); font-size: 0.92rem; }
+        .fit-history-main .meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+        .fit-history-pct { font-weight: 800; font-size: 1rem; color: var(--text-main); flex-shrink: 0; }
+        .fit-history-group-title { font-size: 0.75rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.03em; margin: 1.1rem 0 0.3rem; }
+
+        /* ---- Chooser list items ---- */
+        .fit-choice-item { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--glass-highlight); border: 1px solid transparent; border-radius: var(--radius-md); padding: 0.7rem 1rem; margin-bottom: 8px; cursor: pointer; color: var(--text-main); font-size: 0.88rem; font-family: inherit; text-align: left; transition: var(--transition-fast); }
+        .fit-choice-item:hover { background: var(--lift-3); border-color: var(--primary); transform: translateX(4px); }
+        .fit-choice-item small { display: block; color: var(--text-muted); font-weight: 400; font-size: 0.74rem; margin-top: 2px; }
+        .fit-choice-item.danger { color: var(--primary); }
+
+        .fit-detail-box { max-width: 520px; }
+        .fit-detail-box.wide { max-width: 640px; }
+        .fit-form-actions { display: flex; justify-content: flex-end; gap: 14px; margin-top: var(--space-lg); }
+
+        /* ---- Workout / day editor (used inside the Plan Builder and standalone) ---- */
+        .fit-editor-toggle { display: flex; gap: 12px; margin-bottom: var(--space-md); }
+        .fit-editor-toggle button { flex: 1; padding: 0.6rem; border-radius: var(--radius-md); border: 1px solid var(--glass-border); background: var(--glass-highlight); color: var(--text-muted); font-weight: 600; font-size: 0.85rem; cursor: pointer; font-family: inherit; transition: var(--transition-fast); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .fit-editor-toggle button.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border-color: transparent; }
+
+        .fit-ex-row { display: flex; align-items: center; gap: 10px; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 0.65rem 0.8rem; margin-bottom: 8px; }
+        .fit-ex-row .info { flex: 1; min-width: 0; }
+        .fit-ex-row .name { font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
+        .fit-ex-row .spec { font-size: 0.95rem; font-weight: 700; color: var(--text-main); opacity: 0.92; margin-top: 3px; }
+        .fit-ex-row .ctrls { display: flex; gap: 8px; flex-shrink: 0; }
+
+        .fit-add-ex-btn { width: 100%; border: 1px dashed var(--glass-border); background: transparent; color: var(--text-muted); padding: 0.8rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.88rem; cursor: pointer; font-family: inherit; transition: var(--transition-fast); display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .fit-add-ex-btn:hover { border-color: var(--primary); color: var(--text-main); background: var(--glass-highlight); }
+
+        .fit-editor-footer { display: flex; justify-content: space-between; gap: 16px; margin-top: var(--space-lg); padding-top: var(--space-md); border-top: 1px solid var(--glass-border); }
+
+        .fit-set-type-toggle { display: flex; gap: 12px; }
+        .fit-set-type-toggle button { flex: 1; padding: 0.55rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass-highlight); color: var(--text-muted); font-weight: 600; font-size: 0.8rem; cursor: pointer; font-family: inherit; }
+        .fit-set-type-toggle button.active { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); }
+
+        /* ---- Plan builder (big popup) ---- */
+        .fit-builder-box { max-width: 820px; width: 100%; max-height: min(88vh, 820px); }
+        .fit-builder-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: var(--space-md); }
+        .fit-builder-day-tile { background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 0.9rem; cursor: pointer; transition: var(--transition-fast); text-align: left; font-family: inherit; }
+        .fit-builder-day-tile:hover { border-color: var(--primary); background: var(--lift-2); transform: translateY(-2px); }
+        .fit-builder-day-tile .dlabel { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; }
+        .fit-builder-day-tile .dcontent { font-size: 0.88rem; font-weight: 700; color: var(--text-main); }
+        .fit-builder-day-tile.has-workout .dcontent { color: var(--primary); }
+        .fit-builder-day-tile .dmeta { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
+        .fit-builder-back { background: none; border: none; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-bottom: var(--space-md); font-family: inherit; padding: 0; }
+        .fit-builder-back:hover { color: var(--text-main); }
+
+        /* ---- Workout detail (read-only view) ---- */
+        /* Each exercise row is a tap-to-expand summary; the top line always
+           shows name + sets/reps, the detail panel (instructions/equipment/
+           difficulty) is hidden until tapped so the popup stays scannable
+           on a long workout. */
+        .fit-wd-row { border-bottom: 1px solid var(--glass-border); }
+        .fit-wd-row:last-child { border-bottom: none; }
+        .fit-wd-row-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 0.7rem 0; cursor: pointer; background: none; border: none; width: 100%; text-align: left; font: inherit; color: inherit; }
+        .fit-wd-row-top .n { font-weight: 700; color: var(--text-main); font-size: 0.92rem; }
+        .fit-wd-row-top .right { display: flex; align-items: center; gap: 10px; }
+        .fit-wd-row-top .s { color: var(--text-main); opacity: 0.9; font-size: 1rem; font-weight: 700; }
+        .fit-wd-row-top .fit-wd-chevron { color: var(--text-muted); font-size: 0.8rem; transition: transform 0.2s ease; flex-shrink: 0; }
+        .fit-wd-row.open .fit-wd-row-top .fit-wd-chevron { transform: rotate(180deg); color: var(--primary); }
+        .fit-wd-row-detail { display: none; padding: 0 0 0.9rem; font-size: 0.82rem; color: var(--text-muted); }
+        .fit-wd-row.open .fit-wd-row-detail { display: block; }
+        .fit-wd-row-detail .fit-wd-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+        .fit-wd-row-detail .fit-ex-tag { font-size: 0.7rem; }
+        .fit-wd-row-detail .fit-wd-instructions { line-height: 1.5; color: var(--text-main); opacity: 0.85; }
+
+        /* Sticky action footer for popups (e.g. "Start this workout") —
+           sits outside the scrollable body so it stays visible no matter
+           how long the exercise list is, keeping Start dominant. */
+        .fit-detail-footer { flex-shrink: 0; padding-top: var(--space-md); margin-top: var(--space-sm); border-top: 1px solid var(--glass-border); }
+        .fit-detail-footer[hidden] { display: none; }
+
+        .fit-summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: var(--space-md) 0 var(--space-lg); }
+        .fit-summary-tile { background: var(--glass-highlight); border-radius: var(--radius-md); padding: 0.8rem; text-align: center; }
+        .fit-summary-tile .val { font-size: 1.3rem; font-weight: 800; color: var(--text-main); }
+        .fit-summary-tile .lbl { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+        /* ---- Execution overlay ---- */
+        .fit-exec-box { max-width: 560px; }
+        .fit-exec-progress { display: flex; gap: 4px; margin-bottom: var(--space-md); }
+        .fit-exec-progress .seg { flex: 1; height: 4px; border-radius: 3px; background: var(--recess-2); }
+        .fit-exec-progress .seg.done { background: linear-gradient(90deg, var(--primary), var(--secondary)); }
+        .fit-exec-progress .seg.current { background: var(--gold); }
+        .fit-exec-exname { font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px; }
+        .fit-exec-target { font-size: 0.95rem; font-weight: 700; color: var(--text-main); opacity: 0.9; margin-bottom: var(--space-md); }
+        .fit-exec-sets { display: flex; flex-direction: column; gap: 10px; margin-bottom: var(--space-md); }
+        .fit-exec-set-row { display: flex; flex-direction: column; gap: 8px; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 0.7rem 0.9rem; }
+        .fit-exec-set-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+        .fit-exec-set-head .setlbl { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+        .fit-exec-set-head .target { font-size: 1.35rem; font-weight: 800; color: var(--text-main); }
+        .fit-exec-set-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .fit-exec-instructions { font-size: 0.82rem; color: var(--text-muted); background: var(--glass-highlight); border-radius: var(--radius-md); padding: 0.7rem 0.9rem; margin-bottom: var(--space-md); line-height: 1.45; }
+        .fit-actual-reps, .fit-actual-duration { font-size: 1.05rem !important; font-weight: 700; text-align: center; }
+        .fit-exec-nav { display: flex; justify-content: space-between; gap: 16px; margin-top: var(--space-md); }
+
+        /* ---- Timers: per-set exercise timer (counts up, for time-based
+           exercises like Plank/Wall Sit) + a shared rest timer per
+           exercise (counts down). Only one of any of these runs at once —
+           starting a new one auto-pauses whichever was running, enforced
+           in JS via a single shared "active timer" reference. ---- */
+        .fit-set-timer { display: flex; align-items: center; gap: 10px; }
+        .fit-set-timer-display, .fit-rest-timer-display {
+            font-variant-numeric: tabular-nums;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            min-width: 58px;
+        }
+        .fit-set-timer-display.done, .fit-rest-timer-display.done {
+            color: var(--gold);
+            animation: fitTimerDonePulse 1s ease 2;
+        }
+        @keyframes fitTimerDonePulse {
+            0%, 100% { text-shadow: none; }
+            50% { text-shadow: 0 0 10px var(--gold-glow); }
+        }
+        .fit-timer-controls { display: flex; gap: 6px; }
+        .fit-timer-btn {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-highlight);
+            color: var(--text-main);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            flex-shrink: 0;
+        }
+        .fit-timer-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+        .fit-timer-btn:disabled { opacity: 0.35; cursor: default; }
+        .fit-timer-btn.running { background: linear-gradient(135deg, var(--primary), var(--secondary)); border-color: transparent; color: #fff; }
+
+        .fit-rest-timer {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            background: var(--glass-highlight);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 0.7rem 0.9rem;
+            margin-bottom: var(--space-md);
+        }
+        .fit-rest-timer-label { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+
+        /* ---- Account gate ---- */
+        .fit-gate { display: none; text-align: center; padding: 3.5rem 1.5rem; background: var(--glass-surface); border: 1px solid var(--gold-glow); border-radius: var(--radius-lg); margin-top: var(--space-lg); position: relative; overflow: hidden; }
+        .fit-gate.show { display: block; }
+        .fit-gate::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% 0%, var(--gold-soft), transparent 60%);
+            pointer-events: none;
+        }
+        .fit-gate > * { position: relative; }
+        .fit-gate > i.fa-dumbbell { font-size: 2.2rem; color: var(--gold); margin-bottom: 1rem; filter: drop-shadow(0 0 10px var(--gold-glow)); }
+        .fit-gate h2 { color: var(--text-main); margin-bottom: 0.5rem; font-size: 1.4rem; }
+        .fit-gate > p.fit-gate-sub { color: var(--text-muted); max-width: 460px; margin: 0 auto 1.8rem; font-size: 0.92rem; }
+
+        .fit-gate-preview {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px; max-width: 720px; margin: 0 auto 2rem;
+        }
+        .fit-gate-tile {
+            background: var(--glass-highlight); border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md); padding: 1.1rem 0.8rem; text-align: center;
+            transition: var(--transition-fast);
+        }
+        .fit-gate-tile:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 8px 20px var(--gold-glow); }
+        .fit-gate-tile i { font-size: 1.15rem; color: var(--gold); margin-bottom: 0.5rem; display: block; }
+        .fit-gate-tile span { font-size: 0.78rem; font-weight: 600; color: var(--text-main); display: block; }
+
+        .fit-gate-cta-row { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+        .fit-gate-price-note { font-size: 0.76rem; color: var(--text-dim); }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-left">
+            <a href="home.html">
+                <img src="./images/etho_logo-removebg-preview.png" alt="Logo" class="logo">
+            </a>
+        </div>
+        <div class="navbar-right">
+            <span class="account-pill" id="account-pill" title="Signed in"><i class="fa-solid fa-crown"></i></span>
+            <span class="username"><i class="fa-regular fa-circle-user"></i> Welcome, User</span>
+        </div>
+    </nav>
+    <div class="sidebar-overlay" id="overlay"></div>
+    <aside class="sidebar" id="sidebar">
+        <h2>Menu</h2>
+        <nav>
+            <ul>
+                <li><a href="home.html"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+                <li><a href="tracker.html"><i class="fa-solid fa-fire"></i> Tracker</a></li>
+                <li><a href="agenda.html"><i class="fa-solid fa-calendar-days"></i> Agenda</a></li>
+                <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
+                <li><a href="consistency.html"><i class="fa-solid fa-calendar-check"></i> Consistency</a></li>
+                <li><a href="fitness.html" class="active"><i class="fa-solid fa-dumbbell"></i> Fitness</a></li>
+                <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Library</a></li>
+                <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+                <li><a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <div class="burger" id="burger" tabindex="0" aria-label="Toggle menu">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+    <main class="main">
+        <header class="header dash-header-row" style="text-align:left; margin-bottom: var(--space-xl);">
+            <div>
+                <div class="dash-eyebrow"><i class="fa-solid fa-dumbbell"></i> Account feature</div>
+                <h1 style="margin-bottom:0.2rem;">Fitness</h1>
+                <h2 style="font-size:1.05rem; font-weight:400; color:var(--text-muted);">Plan it, do it, track it.</h2>
+            </div>
+            <div class="dash-header-stat">
+                <i class="fa-solid fa-fire"></i>
+                <div>
+                    <div class="dash-header-stat-value" id="fit-header-streak">0</div>
+                    <div class="dash-header-stat-label">day streak</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="fit-gate" id="fit-gate">
+            <i class="fa-solid fa-dumbbell"></i>
+            <h2>Sign in to unlock Fitness</h2>
+            <p class="fit-gate-sub">Plan, execute, and track your own training — goals, a weekly routine you build, calendar and full history, all tied into the rest of your Etho discipline system.</p>
+
+            <div class="fit-gate-preview">
+                <div class="fit-gate-tile"><i class="fa-solid fa-bullseye"></i><span>Fitness Goals</span></div>
+                <div class="fit-gate-tile"><i class="fa-solid fa-clipboard-list"></i><span>Custom Plans</span></div>
+                <div class="fit-gate-tile"><i class="fa-solid fa-person-running"></i><span>Exercise Library</span></div>
+                <div class="fit-gate-tile"><i class="fa-solid fa-calendar-days"></i><span>Schedule</span></div>
+                <div class="fit-gate-tile"><i class="fa-solid fa-clock-rotate-left"></i><span>Full History</span></div>
+            </div>
+
+            <div class="fit-gate-cta-row">
+                <button type="button" class="btn-primary" id="fit-gate-upgrade"><i class="fa-solid fa-crown"></i> Sign in — it's free</button>
+                <span class="fit-gate-price-note">No trial, no card, ever</span>
+            </div>
+        </div>
+
+        <div id="fit-app" style="display:none;">
+            <nav class="fit-tabs" id="fit-tabs">
+                <button class="fit-tab active" data-panel="dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</button>
+                <button class="fit-tab" data-panel="goals"><i class="fa-solid fa-bullseye"></i> Goals</button>
+                <button class="fit-tab" data-panel="plans"><i class="fa-solid fa-clipboard-list"></i> Plans</button>
+                <button class="fit-tab" data-panel="exercises"><i class="fa-solid fa-person-running"></i> Exercises</button>
+                <button class="fit-tab" data-panel="schedule"><i class="fa-solid fa-calendar-days"></i> Schedule</button>
+                <button class="fit-tab" data-panel="history"><i class="fa-solid fa-clock-rotate-left"></i> History</button>
+            </nav>
+
+            <!-- ===== DASHBOARD ===== -->
+            <section class="fit-panel" id="panel-dashboard">
+                <div class="fit-today-card" id="fit-today-card"></div>
+                <div class="fit-stat-strip" id="fit-stat-strip"></div>
+
+                <div class="fit-toolbar">
+                    <h2><i class="fa-solid fa-clipboard-list"></i> Your routine</h2>
+                    <div class="fit-toolbar-actions">
+                        <button class="fit-btn-secondary" data-goto="plans">Manage plans <i class="fa-solid fa-arrow-right"></i></button>
+                        <button type="button" class="fit-routine-toggle" id="fit-routine-toggle" aria-expanded="true" aria-controls="fit-dash-plan-wrap" title="Show/hide your routine">
+                            <i class="fa-solid fa-chevron-down fit-routine-chevron"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="fit-routine-body" id="fit-dash-plan-wrap">
+                    <div class="fit-grid" id="fit-dash-plan"></div>
+                </div>
+
+                <div class="fit-toolbar" style="margin-top:var(--space-xl);">
+                    <h2><i class="fa-solid fa-bullseye"></i> Goal progress</h2>
+                    <div class="fit-toolbar-actions"><button class="fit-btn-secondary" data-goto="goals">See all goals <i class="fa-solid fa-arrow-right"></i></button></div>
+                </div>
+                <div class="fit-grid" id="fit-dash-goals"></div>
+            </section>
+
+            <!-- ===== GOALS ===== -->
+            <section class="fit-panel" id="panel-goals" hidden>
+                <div class="fit-toolbar">
+                    <h2><i class="fa-solid fa-bullseye"></i> Fitness goals</h2>
+                    <div class="fit-toolbar-actions">
+                        <button class="btn-primary" id="fit-new-goal-btn"><i class="fa-solid fa-plus"></i> New goal</button>
+                    </div>
+                </div>
+                <div class="fit-grid" id="fit-goals-list"></div>
+            </section>
+
+            <!-- ===== PLANS ===== -->
+            <section class="fit-panel" id="panel-plans" hidden>
+                <div class="fit-toolbar">
+                    <h2><i class="fa-solid fa-clipboard-list"></i> Fitness plans</h2>
+                    <div class="fit-toolbar-actions">
+                        <button class="btn-primary" id="fit-new-plan-btn"><i class="fa-solid fa-plus"></i> Create plan</button>
+                    </div>
+                </div>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:var(--space-lg);max-width:560px;">Build your own week: pick each day, add the exercises you want (or write your own), set reps or time and rest — no template required.</p>
+                <div class="fit-grid" id="fit-plans-list"></div>
+            </section>
+
+            <!-- ===== EXERCISES ===== -->
+            <section class="fit-panel" id="panel-exercises" hidden>
+                <div class="fit-toolbar">
+                    <h2><i class="fa-solid fa-person-running"></i> Exercise library</h2>
+                    <div class="fit-toolbar-actions">
+                        <button class="btn-primary" id="fit-new-exercise-btn"><i class="fa-solid fa-plus"></i> Add exercise</button>
+                    </div>
+                </div>
+                <div class="fit-ex-toolbar">
+                    <input type="text" id="fit-ex-search" placeholder="Search exercises…" />
+                    <select id="fit-ex-filter"><option value="">All muscle groups</option></select>
+                </div>
+                <div class="fit-ex-grid-wrap" id="fit-ex-grid-wrap">
+                    <div class="template-library-grid" id="fit-ex-grid" style="overflow:visible;"></div>
+                </div>
+                <button type="button" class="fit-ex-show-more-btn" id="fit-ex-show-more-btn" aria-expanded="true">
+                    <i class="fa-solid fa-chevron-down fit-ex-chevron"></i> <span>Show more</span>
+                </button>
+            </section>
+
+            <!-- ===== SCHEDULE (calendar) ===== -->
+            <section class="fit-panel" id="panel-schedule" hidden>
+                <div class="fit-toolbar">
+                    <h2><i class="fa-solid fa-calendar-days"></i> Calendar</h2>
+                </div>
+                <div class="fit-cal-nav">
+                    <button id="fit-cal-prev" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span class="label" id="fit-cal-label">—</span>
+                    <button id="fit-cal-next" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button class="today-btn" id="fit-cal-today">Today</button>
+                </div>
+                <div class="fit-calendar-grid" id="fit-calendar-grid"></div>
+                <div class="fit-cal-legend">
+                    <span><span class="dot" style="background:#7fd996;"></span> Completed</span>
+                    <span><span class="dot" style="background:var(--gold);"></span> Scheduled</span>
+                    <span><span class="dot" style="background:var(--primary);"></span> Missed</span>
+                    <span><span class="dot" style="background:var(--text-dim);"></span> Skipped</span>
+                </div>
+            </section>
+
+            <!-- ===== HISTORY ===== -->
+            <section class="fit-panel" id="panel-history" hidden>
+                <div class="fit-toolbar"><h2><i class="fa-solid fa-clock-rotate-left"></i> Fitness history</h2></div>
+                <div id="fit-history-list"></div>
+            </section>
+        </div>
+
+        <section class="quote-rotator" id="quote-rotator" aria-live="polite">
+            <blockquote id="quote-text"></blockquote>
+            <cite id="quote-author"></cite>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Copyright &copy; 2026. Made with ❤️ by <a href="https://www.youtube.com/channel/UCQCIuukPO_pf-xuCOfHNweg" target="_blank">@Gmindset02</a>.</p>
+    </footer>
+
+    <datalist id="fit-exercise-datalist"></datalist>
+
+    <!-- ===== Reusable overlay shells ===== -->
+    <div class="template-library-overlay" id="fit-chooser-overlay" hidden>
+        <div class="template-library-box" id="fit-chooser-box">
+            <div class="template-library-header">
+                <div>
+                    <h3 id="fit-chooser-title"><i class="fa-solid fa-list"></i> Choose</h3>
+                    <p class="template-library-sub" id="fit-chooser-sub"></p>
+                </div>
+                <button class="template-library-close" id="fit-chooser-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="fit-chooser-body" style="overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <div class="template-library-overlay" id="fit-detail-overlay" hidden>
+        <div class="template-library-box fit-detail-box" id="fit-detail-box">
+            <div class="template-library-header">
+                <div>
+                    <h3 id="fit-detail-title"><i class="fa-solid fa-circle-info"></i> Details</h3>
+                    <p class="template-library-sub" id="fit-detail-sub"></p>
+                </div>
+                <button class="template-library-close" id="fit-detail-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="fit-detail-body" style="overflow-y:auto;"></div>
+            <div class="fit-detail-footer" id="fit-detail-footer" hidden></div>
+        </div>
+    </div>
+
+    <!-- Big popup: the plan builder (day selector <-> day editor) -->
+    <div class="template-library-overlay" id="fit-builder-overlay" hidden>
+        <div class="template-library-box fit-builder-box" id="fit-builder-box">
+            <div class="template-library-header">
+                <div>
+                    <h3 id="fit-builder-title"><i class="fa-solid fa-clipboard-list"></i> Build your plan</h3>
+                    <p class="template-library-sub" id="fit-builder-sub"></p>
+                </div>
+                <button class="template-library-close" id="fit-builder-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="fit-builder-body" style="overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <div class="template-library-overlay" id="fit-exec-overlay" hidden>
+        <div class="template-library-box fit-exec-box" id="fit-exec-box">
+            <div class="template-library-header">
+                <div>
+                    <h3 id="fit-exec-title"><i class="fa-solid fa-stopwatch"></i> Workout</h3>
+                    <p class="template-library-sub" id="fit-exec-sub"></p>
+                </div>
+                <button class="template-library-close" id="fit-exec-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="fit-exec-body" style="overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <script src="account-base.js"></script>
+    <script src="cloud-sync.js"></script>
+    <script src="dialogs.js"></script>
+    <script src="fitness.js"></script>
+
+  <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <a href="home.html" class="mbn-item"><i class="fa-solid fa-house"></i>Home</a>
+    <a href="checklist.html" class="mbn-item"><i class="fa-solid fa-list-check"></i>Today</a>
+    <a href="goals.html" class="mbn-item"><i class="fa-solid fa-bullseye"></i>Goals</a>
+    <a href="consistency.html" class="mbn-item"><i class="fa-solid fa-chart-line"></i>Progress</a>
+    <button type="button" class="mbn-item" id="mbn-more" aria-label="More"><i class="fa-solid fa-bars"></i>More</button>
+  </nav>
+  <script>
+    document.getElementById('mbn-more')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('overlay')?.classList.toggle('active');
+    });
+  </script>
+
+</body>
+</html>

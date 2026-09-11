@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>document.documentElement.style.visibility = "hidden";</script>
+  <title>Welcome | Etho</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;1,9..144,500&display=swap" rel="stylesheet">
+  <link rel="icon" href="./images/favicon.ico">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-lg); }
+
+    .ob-shell {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .ob-progress {
+      display: flex;
+      gap: 6px;
+      margin-bottom: var(--space-xl);
+    }
+    .ob-progress span {
+      flex: 1;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--glass-border);
+      transition: var(--transition);
+    }
+    .ob-progress span.done, .ob-progress span.active { background: var(--primary); }
+
+    .ob-card {
+      background: var(--glass-surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--glass-shadow);
+      padding: var(--space-2xl);
+    }
+
+    .ob-eyebrow { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .ob-title { font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; }
+    .ob-sub { font-size: 0.92rem; color: var(--text-muted); margin-bottom: var(--space-xl); line-height: 1.5; }
+
+    .ob-input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      font-size: 0.95rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+      background: var(--recess-3);
+      color: var(--text-main);
+      margin-bottom: var(--space-lg);
+    }
+
+    .ob-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: var(--space-lg);
+    }
+    .ob-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+      background: var(--glass-highlight);
+      color: var(--text-main);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      text-align: left;
+    }
+    .ob-option i { color: var(--primary); width: 18px; text-align: center; }
+    .ob-option:hover { background: var(--lift-4); transform: translateY(-1px); }
+    .ob-option.selected { border-color: var(--primary); background: var(--primary-soft); }
+
+    .ob-systems-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: var(--space-lg);
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .ob-system-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0.9rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--glass-border);
+      background: var(--glass-highlight);
+      cursor: pointer;
+      transition: var(--transition-fast);
+      text-align: left;
+    }
+    .ob-system-card:hover { background: var(--lift-4); }
+    .ob-system-card.selected { border-color: var(--primary); background: var(--primary-soft); }
+    .ob-system-icon {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--glass-surface); border: 1px solid var(--glass-border); color: var(--primary);
+    }
+    .ob-system-name { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
+    .ob-system-tagline { font-size: 0.78rem; color: var(--text-muted); }
+
+    .ob-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .ob-skip {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .ob-skip:hover { color: var(--text-main); }
+    .ob-next {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0.8rem 1.6rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition-fast);
+    }
+    .ob-next:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    .ob-next:disabled { opacity: 0.5; cursor: default; transform: none; }
+  </style>
+</head>
+<body>
+  <div class="ob-shell">
+    <div class="ob-progress">
+      <span class="active" data-step="1"></span>
+      <span data-step="2"></span>
+      <span data-step="3"></span>
+    </div>
+    <div class="ob-card" id="ob-card"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="auth.js"></script>
+  <script src="cloud-sync.js"></script>
+  <script src="systems-data.js"></script>
+  <script src="systems.js"></script>
+  <script>
+    // ----- State -----
+    const FOCUS_OPTIONS = [
+      { value: "fitness", label: "Fitness", icon: "fa-dumbbell" },
+      { value: "study", label: "Study", icon: "fa-graduation-cap" },
+      { value: "business", label: "Business", icon: "fa-rocket" },
+      { value: "discipline", label: "Discipline", icon: "fa-shield-halved" },
+      { value: "personal", label: "Personal", icon: "fa-sun" },
+      { value: "multiple", label: "A bit of everything", icon: "fa-layer-group" }
+    ];
+
+    // Which systems (from systems-data.js) get suggested for each focus —
+    // keeps step 3 short and relevant instead of showing all 6 every time.
+    const FOCUS_TO_SYSTEM_IDS = {
+      fitness: ["athlete", "morning"],
+      study: ["student", "morning"],
+      business: ["entrepreneur", "deep-work"],
+      discipline: ["discipline", "morning"],
+      personal: ["morning", "discipline"],
+      multiple: ["discipline", "athlete", "student", "entrepreneur", "deep-work", "morning"]
+    };
+
+    let obStep = 1;
+    let obGoalText = "";
+    let obFocus = null;
+    let obSystemId = null;
+
+    const card = document.getElementById("ob-card");
+
+    function setProgress(step) {
+      document.querySelectorAll(".ob-progress span").forEach(el => {
+        const n = Number(el.dataset.step);
+        el.classList.toggle("active", n === step);
+        el.classList.toggle("done", n < step);
+      });
+    }
+
+    function renderStep1() {
+      setProgress(1);
+      card.innerHTML = `
+        <div class="ob-eyebrow">Step 1 of 3</div>
+        <div class="ob-title">What are you working toward?</div>
+        <p class="ob-sub">One sentence is enough — this just helps set up your first system.</p>
+        <input type="text" class="ob-input" id="ob-goal-input" placeholder="e.g. Get in shape while staying on top of work" value="${obGoalText.replace(/"/g, "&quot;")}">
+        <div class="ob-actions">
+          <button class="ob-skip" id="ob-skip-btn">Skip for now</button>
+          <button class="ob-next" id="ob-next-btn">Continue <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      `;
+      const input = document.getElementById("ob-goal-input");
+      document.getElementById("ob-next-btn").addEventListener("click", () => {
+        obGoalText = input.value.trim();
+        obStep = 2;
+        renderStep2();
+      });
+      document.getElementById("ob-skip-btn").addEventListener("click", finishOnboarding);
+      input.focus();
+    }
+
+    function renderStep2() {
+      setProgress(2);
+      card.innerHTML = `
+        <div class="ob-eyebrow">Step 2 of 3</div>
+        <div class="ob-title">Choose your focus</div>
+        <p class="ob-sub">This picks which starting system we'll suggest next.</p>
+        <div class="ob-options" id="ob-focus-options"></div>
+        <div class="ob-actions">
+          <button class="ob-skip" id="ob-skip-btn">Skip for now</button>
+          <button class="ob-next" id="ob-next-btn" disabled>Continue <i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+      `;
+      const optsEl = document.getElementById("ob-focus-options");
+      FOCUS_OPTIONS.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "ob-option" + (obFocus === opt.value ? " selected" : "");
+        btn.innerHTML = `<i class="fa-solid ${opt.icon}"></i> ${opt.label}`;
+        btn.addEventListener("click", () => {
+          obFocus = opt.value;
+          optsEl.querySelectorAll(".ob-option").forEach(el => el.classList.remove("selected"));
+          btn.classList.add("selected");
+          document.getElementById("ob-next-btn").disabled = false;
+        });
+        optsEl.appendChild(btn);
+      });
+      document.getElementById("ob-next-btn").addEventListener("click", () => {
+        if (!obFocus) return;
+        obStep = 3;
+        renderStep3();
+      });
+      document.getElementById("ob-skip-btn").addEventListener("click", finishOnboarding);
+    }
+
+    function renderStep3() {
+      setProgress(3);
+      const ids = FOCUS_TO_SYSTEM_IDS[obFocus] || [];
+      const suggested = ETHO_SYSTEMS.filter(s => ids.includes(s.id));
+
+      card.innerHTML = `
+        <div class="ob-eyebrow">Step 3 of 3</div>
+        <div class="ob-title">Choose a starting system</div>
+        <p class="ob-sub">Activating one sets up your goal, checklist and schedule for you — you can change everything later.</p>
+        <div class="ob-systems-grid" id="ob-systems-grid"></div>
+        <div class="ob-actions">
+          <button class="ob-skip" id="ob-skip-btn">Skip — I'll set this up myself</button>
+          <button class="ob-next" id="ob-next-btn" disabled>Activate & finish <i class="fa-solid fa-bolt"></i></button>
+        </div>
+      `;
+      const grid = document.getElementById("ob-systems-grid");
+      suggested.forEach(sys => {
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = "ob-system-card" + (obSystemId === sys.id ? " selected" : "");
+        el.innerHTML = `
+          <span class="ob-system-icon"><i class="${sys.icon}"></i></span>
+          <span>
+            <div class="ob-system-name">${sys.name}${sys.locked ? ' <i class="fa-solid fa-crown" style="color:var(--gold, #D4AF37);font-size:0.75em;" title="Sign in to unlock"></i>' : ""}</div>
+            <div class="ob-system-tagline">${sys.tagline}</div>
+          </span>
+        `;
+        el.addEventListener("click", () => {
+          obSystemId = sys.id;
+          grid.querySelectorAll(".ob-system-card").forEach(c => c.classList.remove("selected"));
+          el.classList.add("selected");
+          document.getElementById("ob-next-btn").disabled = false;
+        });
+        grid.appendChild(el);
+      });
+      document.getElementById("ob-next-btn").addEventListener("click", async () => {
+        const sys = ETHO_SYSTEMS.find(s => s.id === obSystemId);
+        if (!sys) return;
+        // Locked systems suggested here still respect the plan — a guest
+        // who somehow selects one gets the normal sign-in prompt instead
+        // of a silent activation.
+        const plan = await getUserPlan();
+        if (sys.locked && plan !== "account") {
+          showSignInModal();
+          return;
+        }
+        const btn = document.getElementById("ob-next-btn");
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Setting things up…`;
+        await writeSystemToStorage(sys);
+        if (window.confetti) confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+        finishOnboarding();
+      });
+      document.getElementById("ob-skip-btn").addEventListener("click", finishOnboarding);
+    }
+
+    async function finishOnboarding() {
+      if (obGoalText) {
+        // Stored purely for future personalization — nothing currently
+        // reads this back; kept lightweight on purpose.
+        await cloudSet("onboarding_intent", { text: obGoalText, focus: obFocus, completedAt: new Date().toISOString() });
+      }
+      window.location.href = "home.html";
+    }
+
+    // ----- Init -----
+    (async () => {
+      await requireAuth();
+      renderStep1();
+    })();
+  </script>
+</body>
+</html>

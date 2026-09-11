@@ -1,22 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>document.documentElement.style.visibility = "hidden";</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Dashboard</title>
     <link rel="stylesheet" href="styles.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link class="favicon" rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="./images/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+</head>
 
 <body>
     <nav class="navbar">
-        <div class="navbar-left">
-            <a href="home.html">
-  <a href="home.html"><img src="https://i.postimg.cc/1XtyPCjv/etho-high-resolution-logo-transparent.png" alt="Logo" class="logo"></a>
-            </a>
-        </div>
+<div class="navbar-left">
+  <a href="home.html">
+    <img src="./images/etho_logo-removebg-preview.png" alt="Logo" class="logo">
+  </a>
+</div>
         <div class="navbar-right">
-            <span class="username">Welcome, User</span>
+            <span class="account-pill" id="account-pill" title="Signed in"><i class="fa-solid fa-crown"></i></span>
+            <span class="username"><i class="fa-regular fa-circle-user"></i> Welcome, User</span>
         </div>
     </nav>
 <div class="sidebar-overlay" id="overlay"></div>
@@ -26,10 +31,14 @@
       <ul>
         <li><a href="home.html" class="active"><i class="fa-solid fa-house"></i> Home</a></li>
         <li><a href="checklist.html"><i class="fa-solid fa-list-check"></i> Checklist</a></li>
+        <li><a href="tracker.html"><i class="fa-solid fa-fire"></i> Tracker</a></li>
+        <li><a href="agenda.html"><i class="fa-solid fa-calendar-days"></i> Agenda</a></li>
         <li><a href="goals.html"><i class="fa-solid fa-bullseye"></i> Goals</a></li>
-        <li><a href="tracker.html"><i class="fa-solid fa-chart-line"></i> Tracker</a></li>
-        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Learning</a></li>
-        <li><a href="profile.html"><i class="fa-solid fa-user-gear"></i> Profile</a></li>
+        <li><a href="consistency.html"><i class="fa-solid fa-calendar-check"></i> Consistency</a></li>
+        <li><a href="fitness.html"><i class="fa-solid fa-dumbbell"></i> Fitness</a></li>
+        <li><a href="learning.html"><i class="fa-solid fa-graduation-cap"></i> Library</a></li>
+        <li><a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a></li>
+        <li><a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
       </ul>
     </nav>
   </aside>
@@ -41,51 +50,278 @@
     </div>
 
     <main class="main">
-        <header class="header">
-            <h1>Welcome back.</h1>
-            <h2>Ready to be productive today?</h2>
+        <header class="header dash-header-row" style="text-align:left; margin-bottom: var(--space-2xl);">
+            <div>
+                <div class="dash-date" id="dash-date">—</div>
+                <h1 style="margin-bottom:0.2rem;" id="dash-greeting">Good morning.</h1>
+                <h2 style="font-size:1.05rem; font-weight:400; color:var(--text-muted);">Ready to execute today?</h2>
+            </div>
+            <div class="dash-header-stat">
+                <i class="fa-solid fa-fire"></i>
+                <div>
+                    <div class="dash-header-stat-value" id="header-best-streak">0</div>
+                    <div class="dash-header-stat-label">day streak</div>
+                </div>
+            </div>
         </header>
 
-        <div class="overview">
-            <div class="card">
-                <h3><a href="goals.html">Goals</a> </h3>
-                <p>Track your SMART goals progress.</p>
-                <img src="../assets/images/progress.png" alt="Progress Chart">
+        <!-- ===== Today's Progress + Etho Score — combined into one card so mobile
+             gets a single scroll-stop instead of two separate glass panels ===== -->
+        <div class="today-hero-card">
+          <div class="today-hero-progress" data-href="checklist.html" role="link" tabindex="0" aria-label="Open today's plan">
+            <div class="today-progress-label">Today's Progress</div>
+            <div class="today-progress-fraction"><span id="today-progress-done">0</span> / <span id="today-progress-total">0</span> <span class="today-progress-fraction-unit">completed</span></div>
+            <div class="checklist-progress-bar-bg today-progress-bar-bg">
+              <div class="checklist-progress-bar-fill" id="today-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="today-progress-pct" id="today-progress-pct">0% completed today</div>
+            <div class="dash-cta">Continue today's plan <i class="fa-solid fa-arrow-right"></i></div>
+          </div>
 
-                <div style="margin-top:1rem; text-align:right; color:var(--primary); font-weight:600;"><a href="goals.html"> View &rarr;</a></div>
-            </div>
-            <div class="card">
-                <h3><a href="checklist.html">Checklist</a></h3>
-                <p>Manage your daily tasks and routines.</p>
-                <img src="../assets/images/checklist.png" alt="Checklist Preview">
+          <div class="today-hero-divider"></div>
 
-                <div style="margin-top:1rem; text-align:right; color:var(--primary); font-weight:600;" class="view-link"><a href="checklist.html"> View &rarr;</a></div>
+          <div class="today-hero-score" data-account-feature data-account-label="Etho Score" data-account-copy="One live number blending your checklist, goals, fitness and habits into a single daily discipline score." role="button" tabindex="0" aria-label="View Etho Score breakdown">
+            <div class="etho-score-label"><i class="fa-solid fa-crown etho-score-crown"></i> Etho Score</div>
+            <div class="etho-score-ring-wrap">
+              <svg class="etho-score-ring" viewBox="0 0 120 120">
+                <circle class="etho-score-ring-bg" cx="60" cy="60" r="52"></circle>
+                <circle class="etho-score-ring-fill" id="etho-score-ring-fill" cx="60" cy="60" r="52"></circle>
+              </svg>
+              <div class="etho-score-value" id="etho-score-value">—</div>
             </div>
-            <div class="card">
-                <h3><a href="tracker.html">Habit Tracker</a></h3>
-                <p>Visualize your consistency over time.</p>          
-                <img src="../assets/images/track-preview.png" alt="Tracker Preview">
-                <div style="margin-top:1rem; text-align:right; color:var(--primary); font-weight:600;"><a href="tracker.html"> View &rarr;</a></div>
-            </div>
-            <div class="card">
-                <h3><a href="learning.html">Learning</a></h3>
-                <p>Keep notes and resources in one place.</p>
-                <img src="../assets/images/note.png" alt="Notes Preview">
-                <div style="margin-top:1rem; text-align:right; color:var(--primary); font-weight:600;"><a href="learning.html"> View &rarr;</a></div>
-            </div>
+            <div class="etho-score-sub" id="etho-score-sub">Today's discipline</div>
+          </div>
         </div>
 
-        <div class="quote">
-            <p>"The only way to do great work is to love what you do."</p>
-            <small>— Steve Jobs</small>
-        </div>
-        
+        <!-- ===== Today's Checklist — the central action component ===== -->
+        <section class="today-checklist-section">
+          <div class="today-checklist-head">
+            <h3><i class="fa-solid fa-list-check"></i> Today's Checklist</h3>
+            <a href="checklist.html" class="today-checklist-open">Open full Checklist <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+          <ul class="today-checklist-list" id="today-checklist-list"></ul>
+        </section>
+
+        <div class="dash-layout">
+
+          <!-- ===== PRIMARY: things that answer "what do I actually do today"
+               — reminders/agenda/fitness all have a real today-state; Goals
+               and Learning are status/library cards without a per-day action,
+               so they've moved down into "More insights" below to keep this
+               area lean and action-first instead of reading like a stats
+               dashboard ===== -->
+          <div class="dash-grid">
+
+            <div class="dash-card" data-href="tracker.html" role="link" tabindex="0" aria-label="Open Habit Tracker">
+              <div class="dash-card-top">
+                <span class="dash-icon"><i class="fa-solid fa-chart-line"></i></span>
+                <span class="dash-badge muted" id="tracker-badge">—</span>
+              </div>
+              <h3>Habit Streak</h3>
+              <div class="dash-stat-row">
+                <span class="dash-stat-value" id="tracker-streak-value">0</span>
+                <span class="dash-stat-unit">day streak</span>
+              </div>
+              <div class="checklist-progress-bar-bg">
+                <div class="checklist-progress-bar-fill" id="tracker-progress-fill" style="width:0%"></div>
+              </div>
+              <p class="dash-meta" id="tracker-meta">0 of 0 habits done today</p>
+              <div class="dash-cta">Open Tracker <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+
+            <div class="dash-card" data-href="checklist.html" role="link" tabindex="0" aria-label="Open Reminders" data-account-feature data-account-label="Smart Reminders" data-account-copy="Task-time alarms that keep ringing until you actually show up.">
+              <div class="dash-card-top">
+                <span class="dash-icon"><i class="fa-solid fa-crosshairs"></i></span>
+                <span class="dash-badge" id="next-action-badge">NEXT</span>
+            </div>
+
+              <h3>Smart reminders</h3>
+
+            <div class="dash-stat-row">
+                <span class="dash-stat-value" id="next-action-value">—</span>
+            </div>
+
+          <p class="dash-meta" id="next-action-meta">
+              Your highest-priority action right now.
+          </p>
+
+          <div class="dash-cta" id="next-action-btn">
+            Open Reminders <i class="fa-solid fa-arrow-right"></i>
+          </div>
+</div>
+
+
+<div class="dash-card" data-href="fitness.html" data-account-feature data-account-label="Fitness Tracker" data-account-copy="Build your own workout plan and track sessions alongside the rest of your routine.">
+  <div class="dash-card-top">
+    <span class="dash-icon"><i class="fa-solid fa-dumbbell"></i></span>
+    <span class="dash-badge" id="recovery-badge">—</span>
+  </div>
+
+  <h3>Fitness tracker</h3>
+
+  <div class="dash-stat-row">
+    <span class="dash-stat-value" id="recovery-value">0</span>
+    <span class="dash-stat-unit" id="recovery-unit">Fitness plan created</span>
+  </div>
+
+      <p class="dash-meta" id="recovery-meta">
+        Create your own fitness plan to stay on track with your health.
+      </p>
+
+      <div class="dash-cta" id="recovery-btn">
+        Open Fitness <i class="fa-solid fa-arrow-right"></i>
+      </div>
+    </div>
+
+            <div class="dash-card" data-href="agenda.html" role="link" tabindex="0" aria-label="Open Agenda" data-account-feature data-account-label="Etho Agenda" data-account-copy="A day-by-day agenda to plan events and time blocks alongside your habits and tasks.">
+              <div class="dash-card-top">
+                <span class="dash-icon"><i class="fa-solid fa-calendar-days"></i></span>
+                <span class="dash-badge muted" id="agenda-badge">—</span>
+              </div>
+              <h3>Etho Agenda</h3>
+              <div class="dash-stat-row">
+                <span class="dash-stat-value" id="agenda-stat-value">0</span>
+                <span class="dash-stat-unit">events today</span>
+              </div>
+              <p class="dash-meta" id="agenda-meta">Plan your day, block by block.</p>
+              <div class="dash-cta">Open Agenda <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+
+          </div><!-- /.dash-grid -->
+
+          <!-- ===== SECONDARY: history / analytics / status cards — real and
+               useful, but without a specific "do this today" action, so
+               they're deliberately smaller and further down (Goals + Learning
+               moved here from the primary grid above) so the page reads as
+               "what do I do today" first, not a stats dashboard ===== -->
+          <h3 class="dash-section-label"><i class="fa-solid fa-chart-simple"></i> More insights</h3>
+          <div class="dash-grid dash-grid-secondary">
+
+            <div class="dash-card" data-href="goals.html" role="link" tabindex="0" aria-label="Open Goals">
+              <div class="dash-card-top">
+                <span class="dash-icon"><i class="fa-solid fa-bullseye"></i></span>
+                <span class="dash-badge muted" id="goals-badge">—</span>
+              </div>
+              <h3>Goals</h3>
+              <div class="dash-stat-row">
+                <span class="dash-stat-value" id="goals-stat-value">0</span>
+                <span class="dash-stat-unit">active</span>
+              </div>
+              <div class="checklist-progress-bar-bg">
+                <div class="checklist-progress-bar-fill" id="goals-progress-fill" style="width:0%"></div>
+              </div>
+              <p class="dash-meta" id="goals-meta">0 of 0 goals complete</p>
+              <div class="dash-cta">Open Goals <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+
+            <div class="dash-card" data-href="learning.html" role="link" tabindex="0" aria-label="Open Learning">
+              <div class="dash-card-top">
+                <span class="dash-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                <span class="dash-badge muted" id="learning-badge">—</span>
+              </div>
+              <h3>Learning</h3>
+              <div class="dash-stat-row">
+                <span class="dash-stat-value" id="learning-stat-value">0</span>
+                <span class="dash-stat-unit">notes saved</span>
+              </div>
+              <p class="dash-meta" id="learning-meta">Start capturing ideas.</p>
+              <div class="dash-cta">Open Learning <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+
+            <div class="dash-card" data-href="consistency.html" role="link" tabindex="0" aria-label="Open Consistency Tracker">
+              <div class="dash-card-top">
+                <span class="dash-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                <span class="dash-badge muted" id="consistency-badge">—</span>
+              </div>
+              <h3>Consistency</h3>
+              <div class="dash-stat-row">
+                <span class="dash-stat-value" id="consistency-stat-value">0</span>
+                <span class="dash-stat-unit">day streak</span>
+              </div>
+              <div class="checklist-progress-bar-bg">
+                <div class="checklist-progress-bar-fill" id="consistency-progress-fill" style="width:0%"></div>
+              </div>
+              <p class="dash-meta" id="consistency-meta">0% success rate this year</p>
+              <div class="dash-cta">Open Consistency <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+
+            <div class="dash-card" id="etho-trend-card" role="button" tabindex="0" aria-label="View Etho Score breakdown" data-account-feature data-account-label="Etho Score Trend" data-account-copy="See your score move day by day and spot what's driving it.">
+              <div class="dash-card-top">
+                <span class="dash-icon"><i class="fa-solid fa-arrow-trend-up"></i></span>
+                <span class="dash-badge muted" id="etho-trend-badge">—</span>
+              </div>
+              <h3>Etho Score · This Week</h3>
+              <div class="dash-stat-row">
+                <span class="dash-stat-value" id="etho-trend-value">0</span>
+                <span class="dash-stat-unit">/ 100 today</span>
+              </div>
+              <div class="week-chart" id="etho-trend-chart"></div>
+              <div class="dash-cta">See the breakdown <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+
+            <div class="dash-card" data-href="consistency.html" role="link" tabindex="0" aria-label="Open Weekly Momentum" data-account-feature data-account-label="Weekly Momentum" data-account-copy="Full consistency history, streaks and heatmaps across days and months.">
+              <div class="dash-card-top">
+                <span class="dash-icon"><i class="fa-solid fa-fire"></i></span>
+                <span class="dash-badge muted" id="weekly-rank-badge">—</span>
+              </div>
+              <h3>Weekly Momentum</h3>
+              <div class="dash-stat-row">
+                <span class="dash-stat-value" id="weekly-rank-value">0</span>
+                <span class="dash-stat-unit">/ 7 active days</span>
+              </div>
+              <div class="week-chart" id="week-chart"></div>
+            </div>
+
+            <div class="dash-card" id="open-systems-btn" role="button" tabindex="0" aria-label="Activate a System">
+              <div class="dash-card-top">
+                <span class="dash-icon"><i class="fa-solid fa-layer-group"></i></span>
+                <span class="dash-badge muted">NEW</span>
+              </div>
+              <h3>Etho Systems</h3>
+              <p class="dash-meta">Activate a complete starter system — goals, checklist and schedule, in one click.</p>
+              <div class="dash-cta">Browse Systems <i class="fa-solid fa-arrow-right"></i></div>
+            </div>
+
+          </div><!-- /.dash-grid-secondary -->
+
+        </div><!-- /.dash-layout -->
+
+    <section class="quote-rotator" id="quote-rotator" aria-live="polite">
+      <blockquote id="quote-text"></blockquote>
+      <cite id="quote-author"></cite>
+    </section>
+
     </main>
 
     <footer class="footer">
-        <p>Copyright &copy; 2025. Made with ❤️.</p>
+        <p>Copyright &copy; 2026. Made with ❤️ by <a href="https://www.youtube.com/channel/UCQCIuukPO_pf-xuCOfHNweg" target="_blank">@Gmindset02</a>.</p>
     </footer>
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="auth.js"></script>
+    <script src="account-base.js"></script>
+    <script src="dialogs.js"></script>
+    <script src="cloud-sync.js"></script>
+    <script src="etho-score.js"></script>
     <script src="script.js"></script>
+    <script src="systems-data.js"></script>
+    <script src="systems.js"></script>
+
+
+  <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <a href="home.html" class="mbn-item active"><i class="fa-solid fa-house"></i>Home</a>
+    <a href="checklist.html" class="mbn-item"><i class="fa-solid fa-list-check"></i>Today</a>
+    <a href="goals.html" class="mbn-item"><i class="fa-solid fa-bullseye"></i>Goals</a>
+    <a href="consistency.html" class="mbn-item"><i class="fa-solid fa-chart-line"></i>Progress</a>
+    <button type="button" class="mbn-item" id="mbn-more" aria-label="More"><i class="fa-solid fa-bars"></i>More</button>
+  </nav>
+  <script>
+    document.getElementById('mbn-more')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('sidebar')?.classList.toggle('open');
+      document.getElementById('overlay')?.classList.toggle('active');
+    });
+  </script>
+
 </body>
 </html>
